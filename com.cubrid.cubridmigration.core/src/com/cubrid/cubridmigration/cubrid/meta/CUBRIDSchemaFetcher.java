@@ -98,7 +98,7 @@ public final class CUBRIDSchemaFetcher extends
 
 	private static final String ALL_TABLE_COLUMN = "SELECT a.class_name, a.attr_name, a.attr_type, a.from_class_name,"
 			+ " a.data_type, a.prec, a.scale, a.is_nullable,"
-			+ " a.code_set, a.domain_class_name, a.default_value, a.def_order,c.is_reuse_oid_class"
+			+ " a.domain_class_name, a.default_value, a.def_order,c.is_reuse_oid_class"
 			+ " FROM db_attribute a , db_class c"
 			+ " WHERE c.class_name = a.class_name AND c.class_type='CLASS' AND c.is_system_class='NO' and from_class_name is NULL"
 			+ " ORDER BY a.class_name, c.class_type, a.def_order";
@@ -854,7 +854,7 @@ public final class CUBRIDSchemaFetcher extends
 			// get table information
 			String sql = "SELECT a.attr_name, a.attr_type, a.from_class_name,"
 					+ " a.data_type, a.prec, a.scale, a.is_nullable, "
-					+ " a.code_set, a.domain_class_name, a.default_value, a.def_order"
+					+ " a.domain_class_name, a.default_value, a.def_order"
 					+ " FROM db_attribute a WHERE a.class_name=? " + " order by a.def_order";
 
 			preStmt = conn.prepareStatement(sql);
