@@ -300,6 +300,12 @@ public class Oracle2CUBRIDTranformHelper extends
 			return;
 		}
 
+		if (isDefaultValueExpression(defaultValue)) {
+			cubridColumn.setDefaultIsExpression(true);
+			cubridColumn.setDefaultValue(defaultValue);
+			return;
+		}
+
 		if ("TIMESTAMP".equalsIgnoreCase(dataType)) {
 			try {
 				CUBRIDTimeUtil.parseDatetime2Long(defaultValue, TimeZone.getDefault());
@@ -329,7 +335,22 @@ public class Oracle2CUBRIDTranformHelper extends
 			}
 		}
 	}
+	
+	/**
+	 * isDefaultValueExpression
+	 * @param defaultValue
+	 * @return
+	 */
+	private boolean isDefaultValueExpression(String defaultValue) {
+		String lowerCaseDefaultValue = defaultValue.toLowerCase(Locale.US);
+		
+		if (lowerCaseDefaultValue.startsWith("to_char")) {
+			return true;
+		}
 
+		return false;
+	}
+	
 	/**
 	 * 
 	 * verify the length that numeric convert to varchar
