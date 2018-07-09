@@ -15,8 +15,8 @@ __Note__: When you want to use this tool, you need to download JDBC files first 
 
 ```
 cd cubridmigration/com.cubrid.cubridmigration.build/
-wget http://ftp.cubrid.org/CUBRID_Docs/CMT/cmt-build-3rdparty-libs.zip
-unzip cmt-build-3rdparty-libs.zip
+wget http://ftp.cubrid.org/CUBRID_Docs/CMT/cmt-build-3rdparty-libs.tgz
+tar -xvf cmt-build-3rdparty-libs.tgz
 ```
 
 ### prepare dependency files for test
