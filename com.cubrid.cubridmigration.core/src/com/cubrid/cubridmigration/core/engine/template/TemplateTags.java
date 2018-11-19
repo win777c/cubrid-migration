@@ -205,4 +205,8 @@ public final class TemplateTags {
 	public static final String TAG_SQL_SCHEMA = "sql_schema";
 	public static final String ATTR_UPDATE_STATISTICS = "update_statistics";
 	public static final String ATTR_AUTO_SYNCHRONIZE_START_VALUE = "auto_synchronize_start_value";
+	
+	// CTC
+	public static final String ATTR_CTC_PORT = "ctc_port";
+	public static final String ATTR_CTC_MODE = "ctc_mode";
 }
