@@ -149,7 +149,40 @@ public class ConnParameters implements
 	private String timeZone;
 	private String conUser;
 	private String userJDBCURL;
+	
+	// CTC
+	private int ctcHandleId;
+	private boolean isCTCMode;
+	private int ctcPort;
+	
+	public int getCtcHandleId() {
+    	return ctcHandleId;
+    }
 
+	public void setCtcHandleId(int ctcHandleId) {
+    	this.ctcHandleId = ctcHandleId;
+    }
+	
+	public boolean isCTCMode() {
+    	return isCTCMode;
+    }
+
+	public int getCTCPort() {
+    	return ctcPort;
+    }
+
+	public void setCTCMode(boolean isCTCMode) {
+    	this.isCTCMode = isCTCMode;
+    }
+
+	public void setCTCPort(int ctcPort) {
+    	this.ctcPort = ctcPort;
+    }
+
+	public String getCTCConnectionString() {
+		return "ctc:cubrid:" + getHost() + ":" + getCTCPort();
+	}
+	
 	private ConnParameters() {
 
 	}
@@ -185,6 +218,11 @@ public class ConnParameters implements
 		this.userJDBCURL = cp.userJDBCURL;
 		this.conName = cp.conName;
 		//this.schema = cp.schema;
+		
+		// CTC
+		this.isCTCMode = cp.isCTCMode;
+		this.ctcPort = cp.ctcPort;
+		this.ctcHandleId = cp.ctcHandleId;
 	}
 
 	/**
