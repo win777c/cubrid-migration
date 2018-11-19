@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/gson-2.8.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jna-4.5.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/slf4j-log4j12-1.7.13.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/activemq-all-5.14.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/jsch-0.1.51.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-beanutils-core-1.8.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-cli-1.2.jar"/>
@@ -23,7 +27,6 @@
 	<classpathentry exported="true" kind="lib" path="lib/dom4j-1.6.1.jar" sourcepath="com.cubrid.cubridmigration.coresrc.zip"/>
 	<classpathentry exported="true" kind="lib" path="lib/json-lib-2.3-jdk15.jar" sourcepath="com.cubrid.cubridmigration.coresrc.zip"/>
 	<classpathentry exported="true" kind="lib" path="lib/xmlbeans-2.3.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/slf4j-api-1.5.8.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/org.apache.log4j_1.2.13.v200806030600.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/com.cubrid.cubridmanager.jdbc.proxy.jar" sourcepath="E:/mydocument/下载/软件下载/com.cubrid.cubridmanager.jdbc.proxy.zip"/>
 	<classpathentry exported="true" kind="lib" path="lib/stax2-api-3.1.1.jar"/>
