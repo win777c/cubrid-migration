@@ -51,6 +51,8 @@ import com.cubrid.cubridmigration.core.engine.exporter.IMigrationExporter;
 import com.cubrid.cubridmigration.core.engine.importer.IMigrationImporter;
 import com.cubrid.cubridmigration.core.engine.task.exp.CSVExportTask;
 import com.cubrid.cubridmigration.core.engine.task.exp.CSVTableSchemaExportTask;
+import com.cubrid.cubridmigration.core.engine.task.exp.CTCExportTask;
+import com.cubrid.cubridmigration.core.engine.task.exp.CTCImportTask;
 import com.cubrid.cubridmigration.core.engine.task.exp.FKExportTask;
 import com.cubrid.cubridmigration.core.engine.task.exp.FunctionExportTask;
 import com.cubrid.cubridmigration.core.engine.task.exp.IndexExportTask;
@@ -502,5 +504,18 @@ public class MigrationTaskFactory {
 		UpdateAutoIncColCurrentValueTask result = new UpdateAutoIncColCurrentValueTask(config);
 		initImportTask(result);
 		return result;
+	}
+	
+	// CTC
+	public ImportTask createCTCImportTask()  {
+		final CTCImportTask task = new CTCImportTask();
+		initImportTask(task);
+		return task;
+	}
+	
+	public ExportTask createCTCExportTask(MigrationContext context)  {
+		final CTCExportTask task = new CTCExportTask(context);
+		initExportTask(task, true);
+		return task;
 	}
 }
