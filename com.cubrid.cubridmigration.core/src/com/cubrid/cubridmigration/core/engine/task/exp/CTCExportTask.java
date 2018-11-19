@@ -87,8 +87,6 @@ public class CTCExportTask extends ExportTask {
 			MessageConsumer messageConsumer = session.createConsumer(destination);
 			messageConsumer.setMessageListener(new MessageListenerAdapter() {
 
-				int count = 0;
-				
 				@Override
 				public void onMessage(Message message, Session session) throws JMSException {
 					super.onMessage(message, session);
@@ -146,18 +144,14 @@ public class CTCExportTask extends ExportTask {
 						IMigrationEventHandler eventsHandler = context.getEventsHandler();
 						eventsHandler.handleEvent(importRecordsEvent);
 					}
-					
-					count++;
-					
-					if(count % 10000 == 0) {
-						try {Thread.sleep(1000);} catch (Exception e) {};
-					}
 				}
 			}); 
 
 			sendTextMessages(messageProducer);
 			
 		} catch (Exception e) {
+			e.printStackTrace();
+		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {
 			try { session.close(); } catch (Exception e) {}
@@ -174,7 +168,8 @@ public class CTCExportTask extends ExportTask {
 	public Map<String, Integer> getTableSummaryMap(CTCJsonModel[] ctcJsonModels) {
 		Map<String, Integer> tableSummaryMap = new HashMap<String, Integer>();
 
-		for (CTCJsonModel ctcJsonModel : ctcJsonModels) {			String tableName = ctcJsonModel.getTableName();
+		for (CTCJsonModel ctcJsonModel : ctcJsonModels) {
+			String tableName = ctcJsonModel.getTableName();
 			if (tableSummaryMap.get(tableName) == null) {
 				tableSummaryMap.put(tableName, 1);
 			} else {
@@ -378,9 +373,6 @@ public class CTCExportTask extends ExportTask {
 				// FETCH CAPTURED TRANSACTION
 				String json = fetchCaptureTransaction(ctcHandleId, jobDescriptor, FETCH_SIZE);
 
-				// test code
-				json = "[{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } },{ \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }, { \"Transaction ID\": \"777\", \"User\": \"dba1\", \"Table\": \"tbl1\", \"Statement type\": \"insert\", \"Columns\": { \"c1111111\": \"11111111\", \"c2222222\": \"22222222\", \"c3333333\": \"33333333\" } }]";
-				
 				if ("".equals(json)) {
 					continue;
 				}
@@ -422,8 +414,8 @@ public class CTCExportTask extends ExportTask {
 	 * @return
 	 */
 	private String fetchCaptureTransaction(int ctcHandle, int jobDescriptor, int fetchSize) {
-		Integer dateSize = new Integer(0);
-		IntByReference _dataSize = new IntByReference(dateSize);
+		Integer resultDateSize = new Integer(0);
+		IntByReference _resultDataSize = new IntByReference(resultDateSize);
 
 		String resultBuffer = "";
 		Pointer resultBufferPointer = new Memory(fetchSize);
@@ -433,16 +425,19 @@ public class CTCExportTask extends ExportTask {
 
 		// CTC - FETCH
 		while (true) {
-			int returnValue = CTCLoader.fetchCapturedTransaction(ctcHandle, jobDescriptor, resultBufferPointer, fetchSize, _dataSize);
+			int returnValue = CTCLoader.fetchCapturedTransaction(ctcHandle, jobDescriptor, resultBufferPointer, fetchSize, _resultDataSize);
 			if (returnValue == ICTCConstants.CTC_FAILED) {
 				break;
 			} else {
+				
+				String capturedTransactionJson = resultBufferPointer.getString(0).substring(0, _resultDataSize.getValue());
+				
 				if (returnValue == ICTCConstants.CTC_SUCCESS) {
-					sb.append(resultBufferPointer.getString(0).substring(0, _dataSize.getValue()));
-					resultBufferPointer.clear(_dataSize.getValue());
+					sb.append(capturedTransactionJson);
+					resultBufferPointer.clear(_resultDataSize.getValue());
 					return sb.toString();
 				} else if (returnValue == ICTCConstants.CTC_SUCCESS_FRAGMENTED) {
-					sb.append(resultBufferPointer.getString(0).substring(0, _dataSize.getValue())).append(", ");
+					sb.append(capturedTransactionJson);
 					continue;
 				} else if (returnValue == ICTCConstants.CTC_SUCCESS_NO_DATA) {
 					if (isFetchingEnd == true) {
