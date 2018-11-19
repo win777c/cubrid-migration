@@ -422,8 +422,8 @@ public class CTCExportTask extends ExportTask {
 	 * @return
 	 */
 	private String fetchCaptureTransaction(int ctcHandle, int jobDescriptor, int fetchSize) {
-		Integer date_size = new Integer(0);
-		IntByReference _data_size = new IntByReference(date_size);
+		Integer dateSize = new Integer(0);
+		IntByReference _dataSize = new IntByReference(dateSize);
 
 		String resultBuffer = "";
 		Pointer resultBufferPointer = new Memory(fetchSize);
@@ -433,16 +433,16 @@ public class CTCExportTask extends ExportTask {
 
 		// CTC - FETCH
 		while (true) {
-			int returnValue = CTCLoader.fetchCapturedTransaction(ctcHandle, jobDescriptor, resultBufferPointer, fetchSize, _data_size);
+			int returnValue = CTCLoader.fetchCapturedTransaction(ctcHandle, jobDescriptor, resultBufferPointer, fetchSize, _dataSize);
 			if (returnValue == ICTCConstants.CTC_FAILED) {
 				break;
 			} else {
 				if (returnValue == ICTCConstants.CTC_SUCCESS) {
-					sb.append(resultBufferPointer.getString(0).substring(0, _data_size.getValue()));
-					resultBufferPointer.clear(_data_size.getValue());
+					sb.append(resultBufferPointer.getString(0).substring(0, _dataSize.getValue()));
+					resultBufferPointer.clear(_dataSize.getValue());
 					return sb.toString();
 				} else if (returnValue == ICTCConstants.CTC_SUCCESS_FRAGMENTED) {
-					sb.append(resultBufferPointer.getString(0).substring(0, _data_size.getValue())).append(", ");
+					sb.append(resultBufferPointer.getString(0).substring(0, _dataSize.getValue())).append(", ");
 					continue;
 				} else if (returnValue == ICTCConstants.CTC_SUCCESS_NO_DATA) {
 					if (isFetchingEnd == true) {
