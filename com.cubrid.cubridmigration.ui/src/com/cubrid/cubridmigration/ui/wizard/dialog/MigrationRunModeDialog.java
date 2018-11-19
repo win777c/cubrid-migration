@@ -60,10 +60,21 @@ public class MigrationRunModeDialog extends
 	private String migrationName;
 	private MigrationScript script = null;
 
+	// CTC
+	private boolean isCtcMode = false;
+	
 	public MigrationRunModeDialog(Shell parentShell) {
 		super(parentShell);
 	}
 
+	public boolean isCtcMode() {
+    	return isCtcMode;
+    }
+
+	public void setCtcMode(boolean isCtcMode) {
+    	this.isCtcMode = isCtcMode;
+    }
+	
 	/**
 	 * constrainShellSize
 	 * 
@@ -103,7 +114,9 @@ public class MigrationRunModeDialog extends
 	 */
 	protected void createButtonsForButtonBar(Composite parent) {
 		createButton(parent, IDialogConstants.OK_ID, Messages.btnStartNow, true);
-		createButton(parent, IDialogConstants.NEXT_ID, Messages.btnReservation, false);
+		if (!isCtcMode()) {
+			createButton(parent, IDialogConstants.NEXT_ID, Messages.btnReservation, false);
+		}
 		createButton(parent, IDialogConstants.CANCEL_ID, Messages.btnCancel, false);
 	}
 
@@ -141,7 +154,7 @@ public class MigrationRunModeDialog extends
 
 		btnImageStartNow.setLayoutData(layoutData);
 		btnImageStartNow.setImage(MigrationUIPlugin.getImage("icon/tb/tb_new_wizard.png"));
-
+		
 		Label lblStartNow = new Label(workArea, SWT.NONE);
 		layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.horizontalIndent = 5;
@@ -149,6 +162,14 @@ public class MigrationRunModeDialog extends
 		lblStartNow.setLayoutData(layoutData);
 		lblStartNow.setText(Messages.lblStartNow);
 
+		// CTC
+		if (isCtcMode()) {
+			lblName.setText("Script Name:");
+			lblStartNow.setText("Press [Start Now] for CUBRID Transaction Capture now.");
+
+			return workArea;
+		}
+		
 		Label btnImageReservation = new Label(workArea, SWT.NONE);
 		layoutData = new GridData(SWT.RIGHT, SWT.CENTER, false, false);
 		layoutData.horizontalIndent = 15;
