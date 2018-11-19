@@ -37,6 +37,7 @@ import java.util.Locale;
 import org.apache.commons.lang.StringUtils;
 
 import com.cubrid.cubridmigration.core.common.PathUtils;
+import com.cubrid.cubridmigration.core.dbobject.Table;
 import com.cubrid.cubridmigration.core.engine.MigrationContext;
 import com.cubrid.cubridmigration.core.engine.ThreadUtils;
 import com.cubrid.cubridmigration.core.engine.UserDefinedDataHandlerManager;
@@ -244,6 +245,12 @@ public class MigrationTasksScheduler {
 		List<SourceSQLTableConfig> sourceSQLTables = config.getExpSQLCfg();
 		List<SourceCSVConfig> sourceCSVFiles = config.getCSVConfigs();
 		List<String> tableCreated = new ArrayList<String>();
+		if (config.isCtcMode()) {
+			List<Table> selectedTableList = config.getSelectedTableList();
+			for (Table table : selectedTableList) {
+				executeTask(taskFactory.createImportTableSchemaTask(table, false, false));
+			}
+		}
 		for (SourceEntryTableConfig st : sourceTables) {
 			if (!st.isCreateNewTable()) {
 				continue;
@@ -308,6 +315,11 @@ public class MigrationTasksScheduler {
 		}
 		List<SourceCSVConfig> csvs = config.getCSVConfigs();
 		isMigData = isMigData || !csvs.isEmpty();
+		// CTC
+		if (config.isCtcMode()) {
+			executeTask2(taskFactory.createCTCExportTask(context));
+			return;
+		}
 		//If no data to be migrated, return
 		if (!isMigData) {
 			return;
