@@ -205,6 +205,59 @@ public class MigrationConfiguration {
 	//True by default
 	private boolean updateStatistics = true;
 
+	// CTC 
+	private boolean isCtcMode = false;
+	private int ctcPort = 20000;
+	private List<Table> selectedTableList = new ArrayList<Table>();
+	
+	private int ctcHandleId = 0;
+	private List<Integer> jobHandleIdList = new ArrayList<Integer>();
+
+	public List<Integer> getJobHandleIdList() {
+    	return jobHandleIdList;
+    }
+
+	public void setJobHandleIdList(List<Integer> jobHandleIdList) {
+    	this.jobHandleIdList = jobHandleIdList;
+    }
+	
+	public void addJobHandleId(Integer jobHandleId) {
+		this.jobHandleIdList.add(jobHandleId);
+	}
+
+	public boolean isCtcMode() {
+    	return isCtcMode;
+    }
+
+	public void setCtcMode(boolean isCtcMode) {
+    	this.isCtcMode = isCtcMode;
+    }
+
+	public int getCtcPort() {
+    	return ctcPort;
+    }
+
+	public void setCtcPort(int ctcPort) {
+    	this.ctcPort = ctcPort;
+    }
+	
+	public List<Table> getSelectedTableList() {
+    	return selectedTableList;
+    }
+
+	public void setSelectedTableList(List<Table> selectedTableList) {
+    	this.selectedTableList = selectedTableList;
+    }
+	
+	public int getCtcHandleId() {
+    	return ctcHandleId;
+    }
+
+	public void setCtcHandleId(int ctcHandleId) {
+    	this.ctcHandleId = ctcHandleId;
+    }
+
+
 	/**
 	 * Add a CSV file to exporting list.
 	 * 
@@ -2547,6 +2600,10 @@ public class MigrationConfiguration {
 	 * @return true:if it has objects to be exported.
 	 */
 	public boolean hasObjects2Export() {
+		// CTC
+		if (isCtcMode()) {
+			return true;
+		}
 		if (sourceIsSQL()) {
 			return !sqlFiles.isEmpty();
 		}
