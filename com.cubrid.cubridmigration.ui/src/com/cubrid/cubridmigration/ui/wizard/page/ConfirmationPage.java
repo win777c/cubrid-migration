@@ -39,12 +39,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.ToolItem;
 
 import com.cubrid.cubridmigration.core.common.log.LogUtil;
 import com.cubrid.cubridmigration.core.connection.ConnParameters;
+import com.cubrid.cubridmigration.core.dbobject.Table;
 import com.cubrid.cubridmigration.core.dbtype.DatabaseType;
 import com.cubrid.cubridmigration.core.engine.config.MigrationConfiguration;
 import com.cubrid.cubridmigration.core.engine.config.SourceConfig;
@@ -303,6 +307,15 @@ public class ConfirmationPage extends
 						lineSeparator);
 			}
 		}
+		//CTC
+		if (migration.isCtcMode()) {
+			text.append("Selected Tables for CTC : ").append(lineSeparator);
+			List<Table> selectedTableList = migration.getSelectedTableList();
+			for (Table table : selectedTableList) {
+				text.append(tabSeparator).append(table.getName()).append(lineSeparator);
+			}
+		}
+		
 		return text.toString();
 	}
 
@@ -325,12 +338,21 @@ public class ConfirmationPage extends
 		btnSaveSchema.setText("Save Source Catalog");
 		btnSaveSchema.setToolTipText("Save Source Catalog to Script");
 		btnSaveSchema.addSelectionListener(new SelectionAdapter() {
-
 			public void widgetSelected(SelectionEvent ev) {
 				MigrationWizard wzd = getMigrationWizard();
 				wzd.setSaveSchema(btnSaveSchema.getSelection());
 			}
 		});
+		
+		// CTC
+		MigrationConfiguration migrationConfig = getMigrationWizard().getMigrationConfig();
+		if (migrationConfig.isCtcMode()) {
+			comRoot.setVisible(false);
+			comRoot.setSize(0, 0);
+			
+			// ProgressBar의 상태를 변경하기 위함
+			migrationConfig.setImplicitEstimate(true);
+		}
 	}
 
 	/**
@@ -341,8 +363,15 @@ public class ConfirmationPage extends
 	protected void afterShowCurrentPage(PageChangedEvent event) {
 		try {
 			MigrationWizard wzd = getMigrationWizard();
-			setTitle(wzd.getStepNoMsg(this) + Messages.confirmMigrationPageTile);
-			setDescription(Messages.confirmMigrationPageDescription);
+			
+			if (wzd.getMigrationConfig().isCtcMode()) {
+				setTitle(wzd.getStepNoMsg(this) + "Confirm CUBRID Transaction Capture");
+				setDescription("Confirm CTC Settings");
+			} else {
+				setTitle(wzd.getStepNoMsg(this) + Messages.confirmMigrationPageTile);
+				setDescription(Messages.confirmMigrationPageDescription);
+			}
+			
 			isScriptSaved = false;
 			MigrationConfiguration cfg = wzd.getMigrationConfig();
 			btnSaveSchema.setSelection(cfg.getOfflineSrcCatalog() != null);
