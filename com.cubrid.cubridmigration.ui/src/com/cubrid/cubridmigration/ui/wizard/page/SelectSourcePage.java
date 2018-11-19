@@ -449,6 +449,8 @@ public class SelectSourcePage extends
 						}
 
 					});
+			// CTC
+			conMgrView.setSelectSourcePage(true);
 		}
 
 		/**
@@ -575,6 +577,13 @@ public class SelectSourcePage extends
 					cfg.renameExpSchema(es, newSchema);
 				}
 			}
+			
+			// CTC
+			ConnParameters connParam = catalog.getConnectionParameters();
+			cfg.setCtcMode(connParam.isCTCMode());
+			cfg.setCtcPort(connParam.getCTCPort());
+			cfg.setCtcHandleId(connParam.getCtcHandleId());
+			
 			return true;
 		}
 
