@@ -525,6 +525,13 @@ public final class MigrationTemplateHandler extends
 					attributes.getValue(TemplateTags.ATTR_IMPLICIT_ESTIMATE_PROGRESS), false));
 			config.setUpdateStatistics(getBoolean(
 					attributes.getValue(TemplateTags.ATTR_UPDATE_STATISTICS), true));
+
+			// CTC
+			if (attributes.getValue(TemplateTags.ATTR_CTC_MODE) != null) {
+				config.setCtcMode(getBoolean(attributes.getValue(TemplateTags.ATTR_CTC_MODE), false));
+				config.setCtcPort(Integer.valueOf(attributes.getValue(TemplateTags.ATTR_CTC_PORT)));
+			}
+
 			String s1 = attributes.getValue(MySQL2CUBRIDMigParas.UNPARSED_TIME);
 			if (s1 != null) {
 				config.putOtherParam(MySQL2CUBRIDMigParas.UNPARSED_TIME, s1);
