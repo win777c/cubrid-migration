@@ -37,6 +37,7 @@ import com.cubrid.cubridmigration.core.engine.event.MigrationStartEvent;
 import com.cubrid.cubridmigration.core.engine.exception.BreakMigrationException;
 import com.cubrid.cubridmigration.core.engine.exception.NormalMigrationException;
 import com.cubrid.cubridmigration.core.engine.exporter.IMigrationExporter;
+import com.cubrid.cubridmigration.core.engine.exporter.impl.CTCExporter;
 import com.cubrid.cubridmigration.core.engine.exporter.impl.CUBRIDJDBCExporter;
 import com.cubrid.cubridmigration.core.engine.exporter.impl.JDBCExporter;
 import com.cubrid.cubridmigration.core.engine.exporter.impl.MYSQLDumpXMLExporter;
@@ -192,7 +193,14 @@ public class MigrationProcessManager {
 		//Exporter
 		MigrationConfiguration config = context.getConfig();
 		IMigrationExporter exporter;
-		if (config.sourceIsOnline()) {
+		if (config.isCtcMode()) {
+			CTCExporter exp = new CTCExporter();
+			exp.setConfig(config);
+			exp.setConnManager(context.getConnManager());
+			exp.setEventHandler(context.getEventsHandler());
+			exp.setStatusManager(context.getStatusMgr());
+			exporter = exp;
+		} else if (config.sourceIsOnline()) {
 			JDBCExporter exp = config.getSourceType() == MigrationConfiguration.SOURCE_TYPE_CUBRID ? new CUBRIDJDBCExporter()
 					: new JDBCExporter();
 			exp.setConfig(config);
@@ -217,7 +225,9 @@ public class MigrationProcessManager {
 		taskFactory.setExporter(exporter);
 		//Importer
 		IMigrationImporter importer;
-		if (config.targetIsFile()) {
+		if (config.isCtcMode()) {
+			importer = new JDBCImporter(context);
+		} else if (config.targetIsFile()) {
 			importer = new LoadFileImporter(context);
 		} else if (config.targetIsOnline()) {
 			importer = new JDBCImporter(context);
