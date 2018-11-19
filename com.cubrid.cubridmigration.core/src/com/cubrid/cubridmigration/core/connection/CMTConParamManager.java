@@ -133,6 +133,11 @@ public final class CMTConParamManager implements
 							hostIP, port, dbName, dt, charSet, username,
 							password, driverPath, schema);
 					cp.setUserJDBCURL(child.getString("user_jdbc_url"));
+					
+					// CTC
+					cp.setCTCMode(child.getBoolean("ctcMode"));
+					cp.setCTCPort(child.getInteger("ctcPort"));
+					
 					addConnection(cp, true);
 				}
 			} finally {
@@ -174,6 +179,11 @@ public final class CMTConParamManager implements
 				child.putString("driverPath", cp.getDriverFileName());
 				child.putString("user_jdbc_url", cp.getUserJDBCURL());
 				//child.putString("schema", cp.getSchema());
+				
+				// CTC
+				child.putBoolean("ctcMode", cp.isCTCMode());
+				child.putInteger("ctcPort", cp.getCTCPort());
+				
 			}
 			FileOutputStream writer = new FileOutputStream(defaultFile);
 			try {
