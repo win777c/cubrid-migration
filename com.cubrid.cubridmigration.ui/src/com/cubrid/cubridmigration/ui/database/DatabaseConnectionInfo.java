@@ -152,5 +152,22 @@ public class DatabaseConnectionInfo {
 	public void setUser(String user) {
 		connParameters.setConUser(user);
 	}
+	
+	// CTC 
+	public void setCTCPort(int ctcPort) {
+		connParameters.setCTCPort(ctcPort);
+	}
+	
+	public int getCTCPort() {
+		return connParameters.getCTCPort();
+	}
+	
+	public void setCTCMode(boolean isCTCMode) {
+		connParameters.setCTCMode(isCTCMode);
+	}
+	
+	public boolean isCTCMode() {
+		return connParameters.isCTCMode();
+	}
 
 }
