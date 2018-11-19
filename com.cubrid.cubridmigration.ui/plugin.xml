@@ -29,6 +29,12 @@
             name="%migrationProgress">
       </editor>
       <editor
+            class="com.cubrid.cubridmigration.ui.wizard.editor.CTCProgressEditorPart"
+            default="false"
+            id="com.cubrid.cubridmigration.ui.wizard.editor.CTCProgressEditorPart"
+            name="%migrationProgress">
+      </editor>
+      <editor
             class="com.cubrid.cubridmigration.ui.history.MigrationReportEditorPart"
             default="false"
             id="com.cubrid.cubridmigration.ui.history.MigrationReportEditorPart"
@@ -44,6 +50,12 @@
             class="com.cubrid.cubridmigration.ui.history.CSVImportReportEditorPart"
             default="false"
             id="com.cubrid.cubridmigration.ui.history.CSVImportReportEditorPart"
+            name="%migrationReport">
+      </editor>
+      <editor
+            class="com.cubrid.cubridmigration.ui.history.CTCReportEditorPart"
+            default="false"
+            id="com.cubrid.cubridmigration.ui.history.CTCReportEditorPart"
             name="%migrationReport">
       </editor>
       <editor
