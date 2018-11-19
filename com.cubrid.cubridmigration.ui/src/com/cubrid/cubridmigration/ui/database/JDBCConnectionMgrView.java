@@ -131,17 +131,28 @@ public class JDBCConnectionMgrView {
 
 	private final List<Integer> supportedDBType = new ArrayList<Integer>();
 
+	private boolean isSelectSourcePage = false;
+	
 	public JDBCConnectionMgrView(Collection<Integer> supportedDBType,
 			IJDBCConnectionFilter conFilter) {
 		this.supportedDBType.addAll(supportedDBType);
 		this.conFilter = conFilter;
+	}
+	
+	// CTC
+	public void setSelectSourcePage(boolean isSourcePage) {
+		this.isSelectSourcePage = isSourcePage;
+	}
+	
+	public boolean isSelectSourcePage() {
+		return isSelectSourcePage; 
 	}
 
 	/**
 	 * add database connection info
 	 */
 	private void addDBConInfo() {
-		ConnParameters cp = DBConnectionDialog.getCatalog(getActiveShell(), getDBTypeArray(), null);
+		ConnParameters cp = DBConnectionDialog.getCatalog(getActiveShell(), getDBTypeArray(), null, isSelectSourcePage());
 		if (cp == null) {
 			return;
 		}
@@ -334,7 +345,7 @@ public class JDBCConnectionMgrView {
 			return;
 		}
 		ConnParameters oldcp = selDci.getConnParameters();
-		ConnParameters cp = DBConnectionDialog.getCatalog(getActiveShell(), getDBTypeArray(), oldcp);
+		ConnParameters cp = DBConnectionDialog.getCatalog(getActiveShell(), getDBTypeArray(), oldcp, isSelectSourcePage());
 		if (null == cp) {
 			return;
 		}
