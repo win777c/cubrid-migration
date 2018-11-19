@@ -58,6 +58,7 @@ import com.cubrid.cubridmigration.ui.script.MigrationScript;
 import com.cubrid.cubridmigration.ui.script.MigrationScriptManager;
 import com.cubrid.cubridmigration.ui.script.dialog.ScheduleMigrationTaskDialog;
 import com.cubrid.cubridmigration.ui.wizard.dialog.MigrationRunModeDialog;
+import com.cubrid.cubridmigration.ui.wizard.editor.CTCProgressEditorPart;
 import com.cubrid.cubridmigration.ui.wizard.editor.MigrationProgressEditorInput;
 import com.cubrid.cubridmigration.ui.wizard.page.CSVImportConfirmPage;
 import com.cubrid.cubridmigration.ui.wizard.page.CSVSelectPage;
@@ -70,6 +71,7 @@ import com.cubrid.cubridmigration.ui.wizard.page.SQLTargetDBSelectPage;
 import com.cubrid.cubridmigration.ui.wizard.page.SelectDestinationPage;
 import com.cubrid.cubridmigration.ui.wizard.page.SelectSourcePage;
 import com.cubrid.cubridmigration.ui.wizard.page.SelectSrcTarTypesPage;
+import com.cubrid.cubridmigration.ui.wizard.page.CTCSelectTablesPage;
 
 /**
  * 
@@ -88,6 +90,8 @@ public class MigrationWizard extends
 	private static final int[] IDX_SQL = new int[] {0, 5, 6, 7};
 
 	private static final int[] IDX_ONLINE = new int[] {0, 1, 2, 3, 4};
+
+	private static final int[] IDX_CTC = new int[] {0, 1, 2, 11, 4};
 
 	//private static final int[] IDX_OFFLINE = new int[]{0, 1, 2, 11, 3, 4 };
 
@@ -204,6 +208,8 @@ public class MigrationWizard extends
 		addPage(new CSVImportConfirmPage("10"));
 
 		//addPage(new SelectOfflineDest2Page("11"));
+		
+		addPage(new CTCSelectTablesPage("11"));
 	}
 
 	/**
@@ -257,6 +263,12 @@ public class MigrationWizard extends
 	 * @return int[]
 	 */
 	private int[] getPageNOs() {
+		
+		// CTC
+		if (migrationConfig.isCtcMode()) {
+			return IDX_CTC;
+		}
+		
 		if (migrationConfig.sourceIsOnline() || migrationConfig.sourceIsXMLDump()) {
 			//			if (migrationConfig.targetIsOffline()) {
 			//				return IDX_OFFLINE;
@@ -370,6 +382,10 @@ public class MigrationWizard extends
 			MigrationRunModeDialog dialog = new MigrationRunModeDialog(getShell());
 			dialog.setMigrationName(migrationConfig.getName());
 			dialog.setScript(migrationScript);
+
+			// CTC
+			dialog.setCtcMode(migrationConfig.isCtcMode());
+			
 			int result = dialog.open();
 			if (result == IDialogConstants.OK_ID) {
 				migrationConfig.setName(dialog.getMigrationName());
@@ -507,6 +523,12 @@ public class MigrationWizard extends
 				return;
 			}
 			String id = MigrationWizardFactory.getProgressEditorPartID(migrationConfig.getSourceType());
+			
+			// CTC
+			if (migrationConfig.isCtcMode()) {
+				id = CTCProgressEditorPart.ID;
+			}
+			
 			PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().openEditor(
 					new MigrationProgressEditorInput(getMigrationConfig(), migrationScript), id);
 		} catch (PartInitException e) {
