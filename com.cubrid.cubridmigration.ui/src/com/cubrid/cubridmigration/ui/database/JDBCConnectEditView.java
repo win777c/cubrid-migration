@@ -35,10 +35,13 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -59,6 +62,8 @@ import com.cubrid.cubridmigration.core.connection.JDBCData;
 import com.cubrid.cubridmigration.core.connection.JDBCDriverManager;
 import com.cubrid.cubridmigration.core.dbobject.Catalog;
 import com.cubrid.cubridmigration.core.dbtype.DatabaseType;
+import com.cubrid.cubridmigration.core.engine.config.MigrationConfiguration;
+import com.cubrid.cubridmigration.ui.MigrationUIPlugin;
 import com.cubrid.cubridmigration.ui.common.Status;
 import com.cubrid.cubridmigration.ui.common.UICommonTool;
 import com.cubrid.cubridmigration.ui.message.Messages;
@@ -87,13 +92,16 @@ public class JDBCConnectEditView {
 
 	private String userJDBCURL;
 
+	private boolean isSelectSourcePage; 
+	
 	/**
 	 * Create the composite
 	 * 
 	 * @param dbTypes DatabaseType[]
 	 */
-	public JDBCConnectEditView(final DatabaseType[] dbTypes) {
+	public JDBCConnectEditView(final DatabaseType[] dbTypes, boolean isSelectSourcePage) {
 		databaseTypes = Arrays.copyOf(dbTypes, dbTypes.length);
+		this.isSelectSourcePage = isSelectSourcePage;
 	}
 
 	/**
@@ -360,12 +368,26 @@ public class JDBCConnectEditView {
 			}
 		});
 
+		String TARGET_TYPE_KEY = "target_type";
+		String SOURCE_TYPE_KEY = "source_type";
+
+		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode(MigrationUIPlugin.PLUGIN_ID);
+		String srcType = preferences.get(SOURCE_TYPE_KEY, String.valueOf(MigrationConfiguration.SOURCE_TYPE_CUBRID));
+		String tarType = preferences.get(TARGET_TYPE_KEY, String.valueOf(MigrationConfiguration.DEST_ONLINE));
+
+		// CTC
+		int dbType = databaseTypes[0].getID();
+		if ((Integer.valueOf(tarType) == MigrationConfiguration.DEST_ONLINE) 
+				&& (dbType == DatabaseType.CUBRID.getID())
+		        && isSelectSourcePage) {
+			createCTCGroup(group);
+		}
+
 		cboDBTypes.addSelectionListener(new SelectionAdapter() {
 
 			public void widgetSelected(final SelectionEvent event) {
 				fireDBSystemChanged();
 			}
-
 		});
 
 		cboDrivers.addSelectionListener(new SelectionAdapter() {
@@ -373,10 +395,75 @@ public class JDBCConnectEditView {
 				cboDrivers.setToolTipText(cboDrivers.getText());
 			}
 		});
-
+		
 		init();
 	}
 
+	private Spinner txtCTCPort;
+	private Label   lblCTCPort;
+	private Button  btnCTCMode;
+	
+	/**
+	 * createCTCGRoup
+	 * @param parent
+	 */
+	private void createCTCGroup(Composite parent) {
+
+		Label comSep = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
+		{
+			GridData gd = new GridData(SWT.FILL, SWT.NONE, true, false);
+			gd.verticalIndent = 8;
+			gd.horizontalSpan = 4;
+			comSep.setLayoutData(gd);
+		}
+
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalSpan = 4;
+
+		GridLayout gridLayout = new GridLayout();
+		gridLayout.numColumns = 4;
+
+		Group ctcGroup = new Group(parent, SWT.None);
+		ctcGroup.setText("CUBRID Transaction Capture");
+		ctcGroup.setLayoutData(gd);
+		ctcGroup.setLayout(gridLayout);
+
+		btnCTCMode = new Button(ctcGroup, SWT.CHECK);
+		btnCTCMode.setText("Enable CUBRID Transaction Capture");
+		btnCTCMode.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		btnCTCMode.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Button btn = (Button) e.getSource();
+				if (btn.getSelection()) {
+					lblCTCPort.setEnabled(true);
+					txtCTCPort.setEnabled(true);
+				} else {
+					lblCTCPort.setEnabled(false);
+					txtCTCPort.setEnabled(false);
+				}
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		});
+		GridData dumpLabelGd = new GridData();
+		dumpLabelGd.heightHint = 4; 
+		
+		lblCTCPort = new Label(ctcGroup, SWT.None);
+		lblCTCPort.setText("CTC Port:");
+
+		txtCTCPort = new Spinner(ctcGroup, SWT.BORDER);
+		txtCTCPort.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtCTCPort.setMinimum(0);
+		txtCTCPort.setMaximum(65535);
+
+		if (btnCTCMode.getSelection()) {
+			txtCTCPort.setEnabled(true);
+		} else {
+			txtCTCPort.setEnabled(false);
+		}
+	}
+	
 	/**
 	 * Initialize the composites.
 	 * 
@@ -390,6 +477,13 @@ public class JDBCConnectEditView {
 		String[] charsets = CharsetUtils.getCharsets();
 		cboCharset.setItems(charsets);
 		cboCharset.select(0);
+		
+		// CTC
+		if (isSelectSourcePage) {
+			if (getCTCMode()) {
+				txtCTCPort.setEnabled(true);
+			}
+		}
 	}
 
 	/**
@@ -468,6 +562,13 @@ public class JDBCConnectEditView {
 		ConnParameters cp = ConnParameters.getConParam(name, hostIp, port, dbName, dt, charSet,
 				user, pass, driverPath, "");
 		cp.setUserJDBCURL(userJDBCURL);
+		
+		// CTC
+		if (isSelectSourcePage && btnCTCMode != null) {
+			cp.setCTCMode(btnCTCMode.getSelection());
+			cp.setCTCPort(Integer.parseInt(txtCTCPort.getText().trim()));
+		}
+		
 		return cp;
 	}
 
@@ -572,6 +673,15 @@ public class JDBCConnectEditView {
 			setCharsetText(cp.getCharset());
 
 			userJDBCURL = cp.getUserJDBCURL();
+			
+			// CTC 
+			if (btnCTCMode != null) {
+				boolean ctcMode = cp.isCTCMode();
+				btnCTCMode.setSelection(ctcMode);
+
+				int ctcPort = cp.getCTCPort();
+				txtCTCPort.setSelection(ctcPort);
+			}
 		}
 	}
 
@@ -634,5 +744,13 @@ public class JDBCConnectEditView {
 	private void setUsername(String username) {
 		this.txtUserName.setText(username == null ? "" : username);
 	}
-
+	
+	// CTC
+	public boolean getCTCMode() {
+		return btnCTCMode.getSelection(); 
+	}
+	
+	public String getCTCPort() {
+		return txtCTCPort.getText().trim();
+	}
 }
