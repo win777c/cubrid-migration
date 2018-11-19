@@ -419,8 +419,34 @@ public class SelectDestinationPage extends
 			btnUpdateStatistics = new Button(container, SWT.CHECK);
 			btnUpdateStatistics.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			btnUpdateStatistics.setText(Messages.btnUpdateStatistics);
+			
+			if (isCTCMode()) {
+				container2.setSize(0, 0);
+				container2.setVisible(false);
+			}
 		}
 
+		/**
+		 * isCTCMode
+		 * @return
+		 */
+		private boolean isCTCMode() {
+			MigrationConfiguration con = getMigrationConfiguration();
+			if (con.isCtcMode()) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		/**
+		 * getMigrationConfiguration
+		 * @return
+		 */
+		private MigrationConfiguration getMigrationConfiguration() {
+			return ((MigrationWizard) getWizard()).getMigrationConfig();
+		}
+		
 		/**
 		 * Hide view
 		 */
