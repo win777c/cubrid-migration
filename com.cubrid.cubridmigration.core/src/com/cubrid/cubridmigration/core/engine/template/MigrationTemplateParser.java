@@ -241,6 +241,11 @@ public final class MigrationTemplateParser {
 					getBooleanString(config.isImplicitEstimate()));
 			param.setAttribute(TemplateTags.ATTR_UPDATE_STATISTICS,
 					getBooleanString(config.isUpdateStatistics()));
+			
+			// CTC
+			param.setAttribute(TemplateTags.ATTR_CTC_MODE, getBooleanString(config.isCtcMode()));
+			param.setAttribute(TemplateTags.ATTR_CTC_PORT, String.valueOf(config.getCtcPort()));
+			
 			if (config.hasOtherParam()) {
 				String s1 = config.getOtherParam(MySQL2CUBRIDMigParas.UNPARSED_TIME);
 				param.setAttribute(MySQL2CUBRIDMigParas.UNPARSED_TIME, s1 == null ? "" : s1);
