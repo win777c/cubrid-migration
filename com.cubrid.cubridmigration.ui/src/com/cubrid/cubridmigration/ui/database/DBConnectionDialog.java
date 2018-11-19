@@ -42,6 +42,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 import com.cubrid.cubridmigration.core.connection.ConnParameters;
+import com.cubrid.cubridmigration.core.ctc.CTCLoader;
+import com.cubrid.cubridmigration.core.ctc.ICTCConstants;
 import com.cubrid.cubridmigration.core.dbtype.DatabaseType;
 import com.cubrid.cubridmigration.ui.common.Status;
 import com.cubrid.cubridmigration.ui.common.dialog.DetailMessageDialog;
@@ -57,6 +59,9 @@ import com.cubrid.cubridmigration.ui.message.Messages;
 public class DBConnectionDialog extends
 		TitleAreaDialog {
 
+	private Integer ctcHandleId;
+	private boolean isTestFinished = false;
+
 	/**
 	 * Get catalog from dialog
 	 * 
@@ -66,11 +71,11 @@ public class DBConnectionDialog extends
 	 * @return catalog or null
 	 */
 	public static ConnParameters getCatalog(Shell parentShell, DatabaseType[] databaseTypes,
-			ConnParameters oldParam) {
+			ConnParameters oldParam, boolean isSelectSourcePage) {
 		if (databaseTypes == null || databaseTypes.length == 0) {
 			throw new IllegalArgumentException("Database type can't be empty");
 		}
-		DBConnectionDialog dialog = new DBConnectionDialog(parentShell, databaseTypes, oldParam);
+		DBConnectionDialog dialog = new DBConnectionDialog(parentShell, databaseTypes, oldParam, isSelectSourcePage);
 		if (dialog.open() != IDialogConstants.OK_ID) {
 			return null;
 		}
@@ -82,10 +87,10 @@ public class DBConnectionDialog extends
 	private final JDBCConnectEditView dbConnectView;
 
 	public DBConnectionDialog(Shell parentShell, DatabaseType[] databaseTypes,
-			ConnParameters oldParam) {
+			ConnParameters oldParam, boolean isSelectSourcePage) {
 		super(parentShell);
 		this.oldParam = oldParam;
-		dbConnectView = new JDBCConnectEditView(databaseTypes);
+		dbConnectView = new JDBCConnectEditView(databaseTypes, isSelectSourcePage);
 		setHelpAvailable(false);
 	}
 
@@ -151,6 +156,9 @@ public class DBConnectionDialog extends
 			}
 		}
 		resultParam = newCP;
+		if (ctcHandleId != null) {
+			resultParam.setCtcHandleId(ctcHandleId);
+		}
 		super.okPressed();
 
 	}
@@ -186,10 +194,29 @@ public class DBConnectionDialog extends
 		//Test the connection
 		if (buttonId == IDialogConstants.DETAILS_ID) {
 			final ConnParameters newCP = dbConnectView.getConnParameters();
-
+			
 			try {
 				Connection conn = newCP.createConnection();
 				conn.close();
+				
+				// CTC Mode
+				if (newCP.isCTCMode() && isTestFinished == false) {
+					String ctcUrl = dbConnectView.getConnParameters().getCTCConnectionString();
+					
+					int ctcHandleId = CTCLoader.openConnection(ICTCConstants.Connection.CTC_CONN_TYPE_DEFAULT, ctcUrl);
+					
+					if (ctcHandleId == ICTCConstants.CTC_SUCCESS) {
+						isTestFinished = true;
+					} else if (ctcHandleId == ICTCConstants.CTC_FAILED) {
+						throw new Exception("Please, check a port number");
+					} else if (ctcHandleId == -100) {
+						throw new Exception("Please, check CTC Server");
+					}
+
+					newCP.setCtcHandleId(ctcHandleId);
+					dbConnectView.getConnParameters().setCtcHandleId(ctcHandleId);
+				}
+				
 				MessageDialog.openInformation(getShell(), Messages.msgInformation,
 						Messages.msgConnectSuccess);
 			} catch (Exception ex) {
