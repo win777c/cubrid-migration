@@ -5,18 +5,36 @@ package com.cubrid.cubridmigration.core.ctc.model;
  * JSON Example                      *
  *************************************
  *                                   *
- * {                                 *
- *      "Transaction ID": "12",      *
+ * [{                                *
+ *      "Transaction ID": 777,       *
+ *      "Table": "tbl1",             *
  *      "Statement type": "insert",  *
- *      "User": "dba",               *
- *      "Table": "tbl_01",           *
  *      "Columns": {                 *
- *          "C1": "1",               *
- *          "C2": "Man",             *
- *          "C3": "SEOUL",           *
- *          "C4": "010-0000-0000"    *
- *  	}                            *
- * }                                 *
+ *          "c1": 1,                 *
+ *          "c2": "UNISQL"           *
+ *      }                            *
+ *  },                               *
+ *  {                                *
+ *      "Transaction ID": 777,       *
+ *      "Table": "tbl1",             *
+ *      "Statement type": "update",  *
+ *      "Columns": {                 *
+ *        "c1": 2,                   *
+ *        "c2": "CUBRID"             *
+ *      },                           *
+ *      "key columns": {             *
+ *          "c1": 1                  *
+ *      }                            *
+ *  },                               *
+ *  {                                *
+ *      "Transaction ID": 777,       *
+ *      "Table": "tbl1",             *
+ *      "Statement type": "delete",  *
+ *      "key columns": {             *
+ *          "c1": 1                  *
+ *      }                            *
+ * 	}                                *
+ * ]                                 *
  *                                   *
  ************************************* 
  */
@@ -37,15 +55,15 @@ public class CTCJsonModel implements Serializable {
 	@SerializedName("Statement type")
 	private String              statementType    = "";
 
-	@SerializedName("User")
-	private String              userName         = "";
-
 	@SerializedName("Table")
 	private String              tableName        = "";
 
 	@SerializedName("Columns")
-	private Map<String, String> columns          = new HashMap<String, String>();
+	private Map<String, Object> columns          = new HashMap<String, Object>();
 
+	@SerializedName("key columns")
+	private Map<String, Object> keyColumns       = new HashMap<String, Object>();
+	
 	/**
 	 * getTransactionId
 	 * @return
@@ -79,22 +97,6 @@ public class CTCJsonModel implements Serializable {
 	}
 
 	/**
-	 * getUser
-	 * @return
-	 */
-	public String getUserName() {
-		return userName;
-	}
-
-	/**
-	 * setUser
-	 * @param userName
-	 */
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-
-	/**
 	 * getTableName
 	 * @return
 	 */
@@ -114,7 +116,7 @@ public class CTCJsonModel implements Serializable {
 	 * getColumns
 	 * @return
 	 */
-	public Map<String, String> getColumns() {
+	public Map<String, Object> getColumns() {
 		return columns;
 	}
 
@@ -122,18 +124,34 @@ public class CTCJsonModel implements Serializable {
 	 * setColumns
 	 * @param columns
 	 */
-	public void setColumns(Map<String, String> columns) {
+	public void setColumns(Map<String, Object> columns) {
 		this.columns = columns;
 	}
 	
+	/**
+	 * getKeyColumns
+	 * @return
+	 */
+	public Map<String, Object> getKeyColumns() {
+    	return keyColumns;
+    }
+
+	/**
+	 * setKeyColumns
+	 * @param keyColumns
+	 */
+	public void setKeyColumns(Map<String, Object> keyColumns) {
+    	this.keyColumns = keyColumns;
+    }
+
 	@Override
 	public String toString() {
 		return "CTCJsonModel [" +
 				"transactionId=" + transactionId 
 				+ ", statementType=" + statementType 
-				+ ", user=" + userName 
 				+ ", tableName=" + tableName 
-				+ ", columns=" + columns 
+				+ ", columns=" + columns
+				+ ", keyColumns=" + keyColumns
 				+ "]";
 	}
 }
