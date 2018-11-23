@@ -1,6 +1,8 @@
 package com.cubrid.cubridmigration.ui.wizard.page;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,7 +19,6 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.SelectionEvent;
@@ -60,6 +61,8 @@ public class CTCSelectTablesPage extends MigrationWizardPage {
 	private TableViewer        columnInformationTableViewer;
 
 	private Text               txtSelectedTableName;
+	
+	private List<Table>        capturableTableList;
 	
 	public CTCSelectTablesPage(String pageName) {
 		super(pageName);
@@ -212,11 +215,6 @@ public class CTCSelectTablesPage extends MigrationWizardPage {
 		selectTableViewer.setColumnProperties(new String[] { "Table name" });
 		selectTableViewer.setContentProvider(new TableViewerContentProvider());
 		selectTableViewer.setLabelProvider(new LeftTableLabelProvider());
-		selectTableViewer.setSorter(new ViewerSorter() {
-			public int compare(Viewer viewer, Object e1, Object e2) {
-			    return super.compare(viewer, e1, e2);
-			}
-		});
 		selectTableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -293,6 +291,10 @@ public class CTCSelectTablesPage extends MigrationWizardPage {
 		if (!isGotoNextPage(event)) {
 			return;
 		}
+		if (capturableTableList == null || capturableTableList.size() == 0) {
+			return;
+		}
+		
 		event.doit = updateMigrationConfig();
 	}
 
@@ -314,9 +316,26 @@ public class CTCSelectTablesPage extends MigrationWizardPage {
 		Map<String, Table> srcTableMap = createTableMap(srcTableList);
 		Map<String, Table> trgTableMap = createTableMap(trgTableList);
 		
-		List<Table> capturableTableList = getCapturableTableList(srcTableMap, trgTableMap);
+		capturableTableList = getCapturableTableList(srcTableMap, trgTableMap);
+		
+		sortTableList(capturableTableList); 
 		
 		selectTableViewer.setInput(capturableTableList);
+	}
+
+	/**
+	 * sortTableList
+	 * @param capturableTableList
+	 */
+	private void sortTableList(List<Table> capturableTableList) {
+		Collections.sort(capturableTableList, new Comparator<Table>() {
+			@Override
+			public int compare(Table tbl1, Table tbl2) {
+				String tableName1 = tbl1.getName();
+				String tableName2 = tbl2.getName();
+				return tableName1.compareToIgnoreCase(tableName2);
+			}
+		});
 	}
 	
 	private List<Table> getTableList(Catalog catalog) {
