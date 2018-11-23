@@ -343,16 +343,6 @@ public class ConfirmationPage extends
 				wzd.setSaveSchema(btnSaveSchema.getSelection());
 			}
 		});
-		
-		// CTC
-		MigrationConfiguration migrationConfig = getMigrationWizard().getMigrationConfig();
-		if (migrationConfig.isCtcMode()) {
-			comRoot.setVisible(false);
-			comRoot.setSize(0, 0);
-			
-			// ProgressBar의 상태를 변경하기 위함
-			migrationConfig.setImplicitEstimate(true);
-		}
 	}
 
 	/**
@@ -367,6 +357,13 @@ public class ConfirmationPage extends
 			if (wzd.getMigrationConfig().isCtcMode()) {
 				setTitle(wzd.getStepNoMsg(this) + "Confirm CUBRID Transaction Capture");
 				setDescription("Confirm CTC Settings");
+
+				// CTC
+				comRoot.setVisible(false);
+				comRoot.setSize(0, 0);
+
+				// ProgressBar의 상태를 변경하기 위함
+				wzd.getMigrationConfig().setImplicitEstimate(true);
 			} else {
 				setTitle(wzd.getStepNoMsg(this) + Messages.confirmMigrationPageTile);
 				setDescription(Messages.confirmMigrationPageDescription);
