@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.eclipse.swt.SWT;
 
+import com.cubrid.cubridmigration.core.ctc.CTCLoader;
 import com.cubrid.cubridmigration.core.dbobject.Table;
 import com.cubrid.cubridmigration.core.engine.IMigrationMonitor;
 
@@ -21,6 +22,13 @@ public class CTCProgressUIController extends MigrationProgressUIController {
 	@Override
 	public void startMigration(IMigrationMonitor monitor, int startMode) {
 	    super.startMigration(monitor, startMode);
+	}
+	
+	@Override
+	public void stopMigrationNow() {
+		super.stopMigrationNow();
+		config.setFetchingEnd(true);
+//		CTCLoader.closeConnection(config.getCtcHandleId());
 	}
 	
 	@Override
