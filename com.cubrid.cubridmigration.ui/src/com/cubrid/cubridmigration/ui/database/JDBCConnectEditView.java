@@ -678,9 +678,18 @@ public class JDBCConnectEditView {
 			if (btnCTCMode != null) {
 				boolean ctcMode = cp.isCTCMode();
 				btnCTCMode.setSelection(ctcMode);
-
+				
 				int ctcPort = cp.getCTCPort();
-				txtCTCPort.setSelection(ctcPort);
+				
+				if (btnCTCMode.getSelection()) {
+					lblCTCPort.setEnabled(true);
+					txtCTCPort.setEnabled(true);
+				} else {
+					lblCTCPort.setEnabled(false);
+					txtCTCPort.setEnabled(false);
+				}
+				
+				txtCTCPort.setSelection(ctcPort);	
 			}
 		}
 	}
