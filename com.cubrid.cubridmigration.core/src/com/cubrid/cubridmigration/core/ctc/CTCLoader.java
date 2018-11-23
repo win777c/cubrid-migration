@@ -15,53 +15,6 @@ public final class CTCLoader {
 	private CTCLoader() {}
 
 	/**
-	 * registerTables
-	 * 
-	 * @param ctcHandle
-	 * @param jobDescriptor
-	 * @param dbUserName
-	 * @param tableName
-	 * @return
-	 */
-	public static int registerTables(int ctcHandle, int jobDescriptor, String dbUserName, String tableName) {
-		return CTCLibrary.INSTANCE.ctc_register_table(ctcHandle, jobDescriptor, dbUserName, tableName);
-	}
-
-	/**
-	 * unregisterTables
-	 * 
-	 * @param ctcHandle
-	 * @param jobDescriptor
-	 * @param dbUserName
-	 * @param tableName
-	 * @return
-	 */
-	public static int unregisterTables(int ctcHandle, int jobDescriptor, String dbUserName, String tableName) {
-		return CTCLibrary.INSTANCE.ctc_unregister_table(ctcHandle, jobDescriptor, dbUserName, tableName);
-	}
-
-	/**
-	 * addJobDescriptor
-	 * 
-	 * @param ctc_handle
-	 * @return
-	 */
-	public static int addJobDescriptor(int ctc_handle) {
-		return CTCLibrary.INSTANCE.ctc_add_job(ctc_handle);
-	}
-
-	/**
-	 * createCtcHandle
-	 * 
-	 * @param connectionType
-	 * @param connectionString
-	 * @return
-	 */
-	public static int createCtcHandle(int connectionType, String connectionString) {
-		return CTCLibrary.INSTANCE.ctc_open_connection(connectionType, connectionString);
-	}
-
-	/**
 	 * checkServerStatus
 	 * 
 	 * @param ctcHandleId
@@ -145,6 +98,19 @@ public final class CTCLoader {
 	}
 
 	/**
+	 * unregisterTable
+	 * 
+	 * @param ctcHandleId
+	 * @param jobDescriptor
+	 * @param dbUser
+	 * @param tableName
+	 * @return
+	 */
+	public static int unregisterTable(int ctcHandleId, int jobDescriptor, String dbUser, String tableName) {
+		return CTCLibrary.INSTANCE.ctc_unregister_table(ctcHandleId, jobDescriptor, dbUser, tableName);
+	}
+	
+	/**
 	 * fetchCapturedTransaction
 	 * 
 	 * @param ctcHandleId
@@ -156,19 +122,6 @@ public final class CTCLoader {
 	 */
 	public static int fetchCapturedTransaction(int ctcHandleId, int jobDescriptor, Pointer resultBuffer, int resultBufferSize, IntByReference resultDataSize) {
 		return CTCLibrary.INSTANCE.ctc_fetch_capture_transaction(ctcHandleId, jobDescriptor, resultBuffer, resultBufferSize, resultDataSize);
-	}
-	
-	/**
-	 * unregisterTable
-	 * 
-	 * @param ctcHandleId
-	 * @param jobDescriptor
-	 * @param dbUser
-	 * @param tableName
-	 * @return
-	 */
-	public static int unregisterTable(int ctcHandleId, int jobDescriptor, String dbUser, String tableName) {
-		return CTCLibrary.INSTANCE.ctc_unregister_table(ctcHandleId, jobDescriptor, dbUser, tableName);
 	}
 
 	/**
