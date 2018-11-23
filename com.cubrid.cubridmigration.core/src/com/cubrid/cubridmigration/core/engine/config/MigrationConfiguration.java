@@ -45,6 +45,10 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import javax.jms.Connection;
+import javax.jms.Session;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -209,9 +213,22 @@ public class MigrationConfiguration {
 	private boolean isCtcMode = false;
 	private int ctcPort = 20000;
 	private List<Table> selectedTableList = new ArrayList<Table>();
-	
+
+	private ActiveMQConnectionFactory connectionFactory;
+	private Connection connection;
+	private Session session;
+
 	private int ctcHandleId = 0;
 	private List<Integer> jobHandleIdList = new ArrayList<Integer>();
+	public boolean isFetchingEnd = false;
+	
+	public boolean isFetchingEnd() {
+		return isFetchingEnd;
+	}
+
+	public void setFetchingEnd(boolean isFetchingEnd) {
+		this.isFetchingEnd = isFetchingEnd;
+	}
 
 	public List<Integer> getJobHandleIdList() {
     	return jobHandleIdList;
@@ -256,7 +273,30 @@ public class MigrationConfiguration {
 	public void setCtcHandleId(int ctcHandleId) {
     	this.ctcHandleId = ctcHandleId;
     }
+	
+	public ActiveMQConnectionFactory getConnectionFactory() {
+		return connectionFactory;
+	}
 
+	public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
+		this.connectionFactory = connectionFactory;
+	}
+
+	public Connection getConnection() {
+		return connection;
+	}
+
+	public void setConnection(Connection connection) {
+		this.connection = connection;
+	}
+
+	public Session getSession() {
+		return session;
+	}
+
+	public void setSession(Session session) {
+		this.session = session;
+	}
 
 	/**
 	 * Add a CSV file to exporting list.
