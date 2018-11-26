@@ -18,10 +18,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.commons.lang.ArrayUtils;
 import org.springframework.jms.listener.adapter.MessageListenerAdapter;
 
 import com.cubrid.cubridmigration.core.common.DBUtils;
@@ -32,6 +32,7 @@ import com.cubrid.cubridmigration.core.dbobject.Table;
 import com.cubrid.cubridmigration.core.engine.IMigrationEventHandler;
 import com.cubrid.cubridmigration.core.engine.JDBCConManager;
 import com.cubrid.cubridmigration.core.engine.MigrationContext;
+import com.cubrid.cubridmigration.core.engine.ThreadUtils;
 import com.cubrid.cubridmigration.core.engine.config.MigrationConfiguration;
 import com.cubrid.cubridmigration.core.engine.config.SourceTableConfig;
 import com.cubrid.cubridmigration.core.engine.event.ExportRecordsEvent;
@@ -56,11 +57,10 @@ public class CTCExportTask extends ExportTask {
 
 	private ActiveMQConnectionFactory connectionFactory;
 	private Connection                connection;
-
+	private Session                   session;
+	
 	private JDBCConManager            connManager;
 	
-	public static boolean isFetchingEnd = false;
-
 	public CTCExportTask(MigrationContext context) {
 		this.context = context;
 		this.migrationConfig = context.getConfig();
@@ -76,6 +76,10 @@ public class CTCExportTask extends ExportTask {
 		} 
 	}
 	
+	/**
+	 * run
+	 * @param queueName
+	 */
 	public void run(String queueName) {
 		Session session = null;
 		try {
@@ -161,7 +165,7 @@ public class CTCExportTask extends ExportTask {
 	}
 
 	/**
-	 * createStatistics
+	 * getTableSummaryMap
 	 * @param ctcJsonModels
 	 * @return
 	 */
@@ -189,7 +193,6 @@ public class CTCExportTask extends ExportTask {
 		
 		String sqlStatement = "";
 		
-		// insert table values
 		if ("insert".equalsIgnoreCase(statementType)) {
 			sqlStatement = createInsertDML(model);
 		} else if ("update".equalsIgnoreCase(statementType)) {
@@ -207,60 +210,112 @@ public class CTCExportTask extends ExportTask {
 	 * @return
 	 */
 	private String createUpdateDML(CTCJsonModel transactionModel) {
-		return "";
+		StringBuffer sb = new StringBuffer();
+
+		String statementType = transactionModel.getStatementType();
+		String tableName = transactionModel.getTableName();
+		
+		Map<String, Object> columns = transactionModel.getColumns();
+		Map<String, Object> keyColumns = transactionModel.getKeyColumns();
+		
+		sb.append(statementType).append(" ").append(tableName).append(" set ");
+		
+		createColumnsStatement(sb, columns);
+		createKeyColumnsStatement(sb, keyColumns);
+		
+		return sb.toString();
 	}
-	
+
 	/**
+	 * createColumnsStatement
+	 * @param sb
+	 * @param columns
+	 */
+	private void createColumnsStatement(StringBuffer sb, Map<String, Object> columns) {
+	    Iterator<String> columnIterator = columns.keySet().iterator();
+		while (columnIterator.hasNext()) {
+			String columnName = columnIterator.next();
+			Object columnValue = columns.get(columnName);
+			
+			sb.append(columnName).append(" = ");
+			if (columnValue instanceof java.lang.String || columnValue instanceof java.lang.Character) {
+				sb.append("'").append(columnValue).append("'");
+			} else {
+				sb.append(columnValue);
+			}
+			
+			if (columnIterator.hasNext()) {
+				sb.append(", ");
+			}
+		}
+    }
+
+	/**
+	 * createKeyColumnsStatement
+	 * @param sb
+	 * @param keyColumns
+	 */
+	private void createKeyColumnsStatement(StringBuffer sb, Map<String, Object> keyColumns) {
+		sb.append(" where ");
+		Iterator<String> keyColumnIterator = keyColumns.keySet().iterator();
+		while(keyColumnIterator.hasNext()) {
+			String columnName = keyColumnIterator.next();
+			Object columnValue = keyColumns.get(columnName);
+			
+			sb.append(columnName).append(" = ");
+			if (columnValue instanceof java.lang.String || columnValue instanceof java.lang.Character) {
+				sb.append("'").append(columnValue).append("'");
+			} else {
+				sb.append(columnValue);
+			}
+			
+			if (keyColumnIterator.hasNext()) {
+				sb.append(" and ");
+			}
+		}
+    }
+	
+	/**	
 	 * createDeleteDML
 	 * @param transactionModel
 	 * @return
 	 */
 	private String createDeleteDML(CTCJsonModel transactionModel) {
-		return "";
+		StringBuffer sb = new StringBuffer();
+
+		String statementType = transactionModel.getStatementType();
+		String tableName = transactionModel.getTableName();
+		Map<String, Object> keyColumns = transactionModel.getKeyColumns();
+
+		sb.append(statementType).append(" from ").append(tableName);
+
+		if (keyColumns.size() > 0) {
+			createKeyColumnsStatement(sb, keyColumns);
+		}
+
+		return sb.toString();
 	}
 	
 	/**
-	 * Example
-	 * 
-	 * 	 CREATE TABLE a_tbl1(
-     *       id INT UNIQUE,
-     *       name VARCHAR,
-     *       phone VARCHAR DEFAULT '000-0000'
-     *   );
-     *   
-     *   --insert default values with DEFAULT keyword before VALUES
-     *   INSERT INTO a_tbl1 DEFAULT VALUES;
-     *   
-     *   --insert multiple rows
-     *   INSERT INTO a_tbl1 VALUES (1,'aaa', DEFAULT),(2,'bbb', DEFAULT);
-     *   
-     *   --insert a single row specifying column values for all
-     *   INSERT INTO a_tbl1 VALUES (3,'ccc', '333-3333');
-     *   
-     *   --insert two rows specifying column values for only
-     *   INSERT INTO a_tbl1(id) VALUES (4), (5);
-     *   
-     *   --insert a single row with SET clauses
-     *   INSERT INTO a_tbl1 SET id=6, name='eee';
-     *   INSERT INTO a_tbl1 SET id=7, phone='777-7777';
-     *   
-     *   SELECT * FROM a_tbl1;
-	 **/
+	 * createInsertDML
+	 * @param transactionModel
+	 * @return
+	 */
 	private String createInsertDML(CTCJsonModel transactionModel) {
 		StringBuffer sb = new StringBuffer();
 		
-		Map<String, String> columns = transactionModel.getColumns();
+		Map<String, Object> columns = transactionModel.getColumns();
 	    
-	    sb.append(transactionModel.getStatementType().toUpperCase())
+	    sb.append(transactionModel.getStatementType())
 	    	.append(" INTO ")
 	    	.append(transactionModel.getTableName())
 	    	.append(" (");
 	    
 	    Iterator<String> columnIterator = columns.keySet().iterator();
-	    
 		while (columnIterator.hasNext()) {
 			String columnName = columnIterator.next();
 			sb.append(columnName);
+			
 			if (columnIterator.hasNext()) {
 				sb.append(", ");
 			}
@@ -270,7 +325,7 @@ public class CTCExportTask extends ExportTask {
 
 		int columnSize = columns.size();
 		int index = 0;
-		for (String s : columns.values()) {
+		for (Object s : columns.values()) {
 			index++;
 			sb.append("'").append(s).append("'");
 			if (index != columnSize) {
@@ -310,19 +365,21 @@ public class CTCExportTask extends ExportTask {
 		connection = connectionFactory.createConnection();
 		connection.start();
 		
-		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		
+		setCtcConfiguration();
+		
 		return session;
 	}
-	
+
 	/**
-	 * createDestination
-	 * @param session
-	 * @param topicName
-	 * @return
-	 * @throws JMSException
+	 * setCtcConfiguration
 	 */
-	private Topic createTopic(Session session, String topicName) throws JMSException {
-		return session.createTopic(topicName);
+	private void setCtcConfiguration() {
+		migrationConfig.setConnectionFactory(connectionFactory);
+		migrationConfig.setConnection(connection);
+		migrationConfig.setSession(session);
+		migrationConfig.setFetchingEnd(false);
 	}
 	
 	/**
@@ -360,29 +417,27 @@ public class CTCExportTask extends ExportTask {
 		
 		String dbUserName = migrationConfig.getSourceConParams().getConUser();
 		int ctcHandleId = migrationConfig.getCtcHandleId();
-		int jobDescriptor = CTCLoader.addJobDescriptor(ctcHandleId);
+		int jobDescriptor = CTCLoader.addJob(ctcHandleId);
 		
 		for (Table table : selectedTableList) {
 			CTCLoader.registerTable(ctcHandleId, jobDescriptor, dbUserName, table.getName());
 		}
-		
+
 		CTCLoader.startCapture(ctcHandleId, jobDescriptor);
 		
-		while (true) {
+		while (!migrationConfig.isFetchingEnd()) {
 			try {
 				// FETCH CAPTURED TRANSACTION
-				String json = fetchCaptureTransaction(ctcHandleId, jobDescriptor, FETCH_SIZE);
+				CTCJsonModel[] ctcJsonModels = fetchCaptureTransaction(ctcHandleId, jobDescriptor, FETCH_SIZE);
 
-				if ("".equals(json)) {
+				if (ctcJsonModels == null) {
 					continue;
 				}
 
-				message.setText(json);
+				message.setText(gson.toJson(ctcJsonModels));
 				
 				messageProducer.send(message);
 
-				CTCJsonModel[] ctcJsonModels = gson.fromJson(json, CTCJsonModel[].class);
-				
 				Map<String, Integer> tableSummaryMap = getTableSummaryMap(ctcJsonModels);
 				Iterator<String> iterator = tableSummaryMap.keySet().iterator();
 				while (iterator.hasNext()) {
@@ -396,14 +451,21 @@ public class CTCExportTask extends ExportTask {
 					final ExportRecordsEvent exportRecordsEvent = new ExportRecordsEvent(stc, statementCount);
 					eventsHandler.handleEvent(exportRecordsEvent);
 				}
+				
+				ctcJsonModels = null;
+				
 			} catch (Exception e) {
 				e.printStackTrace();
-				isFetchingEnd = true;
-				CTCLoader.stopCapture(ctcHandleId, jobDescriptor, ICTCConstants.Job.CTC_QUIT_JOB_IMMEDIATELY);
-				CTCLoader.closeConnection(ctcHandleId);
 				return;
 			} 
 		}
+		
+		for (Table table : selectedTableList) {
+			CTCLoader.unregisterTable(ctcHandleId, jobDescriptor, dbUserName, table.getName());
+		}
+
+		CTCLoader.stopCapture(ctcHandleId, jobDescriptor, ICTCConstants.Job.CTC_QUIT_JOB_IMMEDIATELY);
+		CTCLoader.closeConnection(ctcHandleId);
 	}
 	
 	/**
@@ -413,41 +475,56 @@ public class CTCExportTask extends ExportTask {
 	 * @param fetchSize
 	 * @return
 	 */
-	private String fetchCaptureTransaction(int ctcHandle, int jobDescriptor, int fetchSize) {
-		Integer resultDateSize = new Integer(0);
+	private CTCJsonModel[] fetchCaptureTransaction(int ctcHandle, int jobDescriptor, int fetchSize) {
+		int resultDateSize = 0;
 		IntByReference _resultDataSize = new IntByReference(resultDateSize);
 
 		String resultBuffer = "";
 		Pointer resultBufferPointer = new Memory(fetchSize);
 		resultBufferPointer.setString(0, resultBuffer);
 
-		StringBuffer sb = new StringBuffer();
+		int noDataCount = 0; 
 
+		CTCJsonModel[] ctcJsonModels = null;
+		
 		// CTC - FETCH
-		while (true) {
+		while (!migrationConfig.isFetchingEnd()) {
 			int returnValue = CTCLoader.fetchCapturedTransaction(ctcHandle, jobDescriptor, resultBufferPointer, fetchSize, _resultDataSize);
 			if (returnValue == ICTCConstants.CTC_FAILED) {
 				break;
 			} else {
-				
 				String capturedTransactionJson = resultBufferPointer.getString(0).substring(0, _resultDataSize.getValue());
 				
 				if (returnValue == ICTCConstants.CTC_SUCCESS) {
-					sb.append(capturedTransactionJson);
+					CTCJsonModel[] modelsFromJson = gson.fromJson(capturedTransactionJson, CTCJsonModel[].class);
+					ctcJsonModels = (CTCJsonModel[]) ArrayUtils.addAll(ctcJsonModels, modelsFromJson);
+					
 					resultBufferPointer.clear(_resultDataSize.getValue());
-					return sb.toString();
+					resultBufferPointer = null;
+					_resultDataSize = null;
+					
+					return ctcJsonModels;
 				} else if (returnValue == ICTCConstants.CTC_SUCCESS_FRAGMENTED) {
-					sb.append(capturedTransactionJson);
+					CTCJsonModel[] modelsFromJson = gson.fromJson(capturedTransactionJson, CTCJsonModel[].class);
+					ctcJsonModels = (CTCJsonModel[]) ArrayUtils.addAll(ctcJsonModels, modelsFromJson);
 					continue;
 				} else if (returnValue == ICTCConstants.CTC_SUCCESS_NO_DATA) {
-					if (isFetchingEnd == true) {
+					if (migrationConfig.isFetchingEnd() == true) {
 						break;
 					}
+					
+					noDataCount++;
+					
+					if (noDataCount == 2) {
+						noDataCount = 0; // init
+						ThreadUtils.threadSleep(1000, null);
+					}
+					
 					continue;
 				}
 			}
 		}
 		
-		return "";
+		return null;
 	}
 }
