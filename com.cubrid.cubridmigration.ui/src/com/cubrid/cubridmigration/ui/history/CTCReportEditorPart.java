@@ -46,13 +46,13 @@ public class CTCReportEditorPart extends EditorPart {
     }
 
 	@Override
-    public void init(IEditorSite site, IEditorInput input) throws PartInitException {
+	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
 		setPartName("CTC Report");
 		setTitleToolTip("CTC Report");
 		setTitleImage(SWTResourceConstents.IMAGE_EXPORT_REPORT);
-    }
+	}
 
 	@Override
     public boolean isDirty() {
@@ -60,38 +60,41 @@ public class CTCReportEditorPart extends EditorPart {
     }
 
 	@Override
-    public boolean isSaveAsAllowed() {
-	    return false;
-    }
+	public boolean isSaveAsAllowed() {
+		return false;
+	}
 	
 	@Override
-    public void createPartControl(Composite parent) {
-		Composite backGroundComposite = new Composite(parent, SWT.NONE);
-		backGroundComposite.setLayout(new GridLayout());
-		backGroundComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
-		
-		tfOverview = new TabFolder(backGroundComposite, SWT.NONE);
+	public void createPartControl(Composite parent) {
+		Composite backgroundComposite = new Composite(parent, SWT.NONE);
+		backgroundComposite.setLayout(new GridLayout());
+		backgroundComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
+
+		tfOverview = new TabFolder(backgroundComposite, SWT.NONE);
 		tfOverview.setLayout(new GridLayout());
 		tfOverview.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		TabItem tiOverview = new TabItem(tfOverview, SWT.NONE);
 		tiOverview.setText("Overview");
-		
-		createOverview(tiOverview);
-//		createTimeStatus(tiOverview);
-		
+
+		Composite overviewComp = new Composite(tfOverview, SWT.NONE);
+		overviewComp.setLayout(new GridLayout());
+		overviewComp.setLayoutData(new GridData(GridData.FILL_BOTH));
+
+		createTimeStatus(overviewComp);
+		createOverview(overviewComp);
+
 		setContent2Tables();
-    }
+	}
 
 	/**
 	 * createTimeStatus
-	 * @param bgComp
+	 * @param mainComp
 	 */
-	private void createTimeStatus(TabItem tabItem) {
-		Composite comTime = new Composite(tabItem.getControl().getShell(), SWT.NONE);
-		tabItem.setControl(comTime);
-		comTime.setLayout(new GridLayout(8, false));
-		comTime.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false));
+	private void createTimeStatus(Composite mainComp) {
+		Composite comTime = new Composite(mainComp, SWT.NONE);
+		comTime.setLayout(new GridLayout(6, false));
+		comTime.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		Label lblStartTime = new Label(comTime, SWT.NONE);
 		lblStartTime.setLayoutData(new GridData(SWT.CENTER));
@@ -122,18 +125,16 @@ public class CTCReportEditorPart extends EditorPart {
 	
 	/**
 	 * createOverview
-	 * @param tiTables TabItem
+	 * @param comTime
 	 */
-	private void createOverview(TabItem tiTables) {
+	private void createOverview(Composite comTime) {
 		TableViewerBuilder tvBuilder = new TableViewerBuilder();
 		tvBuilder.setColumnNames(TABLE_HEADER_DATA);
-		tvBuilder.setColumnWidths(new int[] {150, 150, 150, 130});
-		tvBuilder.setColumnStyles(new int[] {SWT.LEFT, SWT.RIGHT, SWT.RIGHT, SWT.RIGHT});
+		tvBuilder.setColumnWidths(new int[] { 200, 200, 200, 200 });
+		tvBuilder.setColumnStyles(new int[] { SWT.LEFT, SWT.RIGHT, SWT.RIGHT, SWT.RIGHT });
 		tvBuilder.setContentProvider(new ArrayContentProvider());
 		tvBuilder.setLabelProvider(new OverviewResultTableLabelProvider());
-		tvRecords = tvBuilder.buildTableViewer(tfOverview, SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
-
-		tiTables.setControl(tvRecords.getTable());
+		tvRecords = tvBuilder.buildTableViewer(comTime, SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
 	}
 	
 	/**
@@ -149,7 +150,7 @@ public class CTCReportEditorPart extends EditorPart {
 	private void setContent2Tables() {
 		MigrationReporter reporter = getReporter();
 		MigrationReport report = reporter.getReport();
-		
+
 		tvRecords.setInput(report.getRecMigResults());
 	}
 	
