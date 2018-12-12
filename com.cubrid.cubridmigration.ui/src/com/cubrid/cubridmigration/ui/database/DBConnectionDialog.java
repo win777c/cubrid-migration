@@ -199,23 +199,7 @@ public class DBConnectionDialog extends
 				Connection conn = newCP.createConnection();
 				conn.close();
 				
-				// CTC Mode
-				if (newCP.isCTCMode() && isTestFinished == false) {
-					String ctcUrl = dbConnectView.getConnParameters().getCTCConnectionString();
-					
-					int ctcHandleId = CTCLoader.openConnection(ICTCConstants.Connection.CTC_CONN_TYPE_DEFAULT, ctcUrl);
-					
-					if (ctcHandleId == ICTCConstants.CTC_SUCCESS) {
-						isTestFinished = true;
-					} else if (ctcHandleId == ICTCConstants.CTC_FAILED) {
-						throw new Exception("Please, check a port number");
-					} else if (ctcHandleId == -100) {
-						throw new Exception("Please, check CTC Server");
-					}
-
-					newCP.setCtcHandleId(ctcHandleId);
-					dbConnectView.getConnParameters().setCtcHandleId(ctcHandleId);
-				}
+				createCtcConnection(newCP);
 				
 				MessageDialog.openInformation(getShell(), Messages.msgInformation,
 						Messages.msgConnectSuccess);
@@ -226,4 +210,24 @@ public class DBConnectionDialog extends
 		}
 		super.buttonPressed(buttonId);
 	}
+
+	private void createCtcConnection(final ConnParameters newCP) throws Exception {
+	    // CTC Mode
+	    if (newCP.isCTCMode() && isTestFinished == false) {
+	    	String ctcUrl = dbConnectView.getConnParameters().getCTCConnectionString();
+	    	
+	    	int ctcHandleId = CTCLoader.openConnection(ICTCConstants.Connection.CTC_CONN_TYPE_DEFAULT, ctcUrl);
+	    	
+	    	if (ctcHandleId == ICTCConstants.CTC_SUCCESS) {
+	    		isTestFinished = true;
+	    	} else if (ctcHandleId == ICTCConstants.CTC_FAILED) {
+	    		throw new Exception("Please, check a port number");
+	    	} else if (ctcHandleId == -100) {
+	    		throw new Exception("Please, check CTC Server");
+	    	}
+
+	    	newCP.setCtcHandleId(ctcHandleId);
+	    	dbConnectView.getConnParameters().setCtcHandleId(ctcHandleId);
+	    }
+    }
 }
