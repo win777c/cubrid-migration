@@ -756,6 +756,9 @@ public class JDBCConnectEditView {
 	
 	// CTC
 	public boolean getCTCMode() {
+		if (btnCTCMode == null) {
+			return false;
+		}
 		return btnCTCMode.getSelection(); 
 	}
 	
