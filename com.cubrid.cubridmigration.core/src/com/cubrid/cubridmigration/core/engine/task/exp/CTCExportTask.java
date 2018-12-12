@@ -1,7 +1,7 @@
 package com.cubrid.cubridmigration.core.engine.task.exp;
 
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,9 +21,11 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.jms.listener.adapter.MessageListenerAdapter;
 
+import com.cubrid.cubridmigration.core.common.Closer;
 import com.cubrid.cubridmigration.core.common.DBUtils;
 import com.cubrid.cubridmigration.core.ctc.CTCLoader;
 import com.cubrid.cubridmigration.core.ctc.ICTCConstants;
@@ -123,31 +125,20 @@ public class CTCExportTask extends ExportTask {
                     }
 
 					CTCJsonModel[] ctcJsonModels = gson.fromJson(messageText, CTCJsonModel[].class);
-					
 					final List<String> sqlList = new ArrayList<String>();
 					for (CTCJsonModel ctcJsonModel : ctcJsonModels) {
 						createSQLStatement(sqlList, ctcJsonModel);
 					}
 					
 					java.sql.Connection targetConnection = connManager.getTargetConnection();
-					for (String sql : sqlList) {
-						executeSQL(targetConnection, sql);
-					}
+
+					executeSQL(targetConnection, sqlList);
+					
 					DBUtils.commit(targetConnection);
+					
+					Closer.close(targetConnection);
 
-					Map<String, Integer> tableSummaryMap = getTableSummaryMap(ctcJsonModels);
-					Iterator<String> iterator = tableSummaryMap.keySet().iterator();
-					while (iterator.hasNext()) {
-						String tableName = iterator.next();
-						int statementCount = tableSummaryMap.get(tableName);
-
-						final SourceTableConfig stc = new SourceTableConfig();
-						stc.setName(tableName);
-						
-						final ImportRecordsEvent importRecordsEvent = new ImportRecordsEvent(stc, statementCount);
-						IMigrationEventHandler eventsHandler = context.getEventsHandler();
-						eventsHandler.handleEvent(importRecordsEvent);
-					}
+					updateTableViewer(ctcJsonModels);
 				}
 			}); 
 
@@ -158,12 +149,33 @@ public class CTCExportTask extends ExportTask {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {
-			try { session.close(); } catch (Exception e) {}
-			try { connection.stop(); } catch (Exception e) {}
-			try { connection.close(); } catch (Exception e) {}
+			try { session.close(); } catch (Exception e) { e.printStackTrace(); }
+			try { connection.stop(); } catch (Exception e) { e.printStackTrace(); }
+			try { connection.close(); } catch (Exception e) { e.printStackTrace(); }
 		}
 	}
 
+	/**
+	 * updateTableViewer
+	 * @param ctcJsonModels
+	 */
+	private void updateTableViewer(CTCJsonModel[] ctcJsonModels) {
+		Map<String, Integer> tableSummaryMap = getTableSummaryMap(ctcJsonModels);
+		Iterator<String> iterator = tableSummaryMap.keySet().iterator();
+		while (iterator.hasNext()) {
+			String tableName = iterator.next();
+			int statementCount = tableSummaryMap.get(tableName);
+
+			final SourceTableConfig stc = new SourceTableConfig();
+			stc.setName(tableName);
+			stc.setTarget(tableName);
+			
+			final ImportRecordsEvent importRecordsEvent = new ImportRecordsEvent(stc, statementCount);
+			IMigrationEventHandler eventsHandler = context.getEventsHandler();
+			eventsHandler.handleEvent(importRecordsEvent);
+		}
+	}
+	
 	/**
 	 * getTableSummaryMap
 	 * @param ctcJsonModels
@@ -174,10 +186,11 @@ public class CTCExportTask extends ExportTask {
 
 		for (CTCJsonModel ctcJsonModel : ctcJsonModels) {
 			String tableName = ctcJsonModel.getTableName();
-			if (tableSummaryMap.get(tableName) == null) {
+			Integer tableNameCount = tableSummaryMap.get(tableName);
+			if (tableNameCount == null) {
 				tableSummaryMap.put(tableName, 1);
 			} else {
-				tableSummaryMap.put(tableName, tableSummaryMap.get(tableName) + 1);
+				tableSummaryMap.put(tableName, tableNameCount + 1);
 			}
 		}
 
@@ -342,16 +355,24 @@ public class CTCExportTask extends ExportTask {
 	 * executeSQL
 	 * @param sql
 	 */
-	private void executeSQL(java.sql.Connection conn, String sql) {
-		PreparedStatement pstmt = null;
-		
+	private void executeSQL(java.sql.Connection conn, List<String> sqlList) {
+		Statement stmt = null;
 		try {
-			pstmt = conn.prepareStatement(sql);
-			pstmt.execute();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+			stmt = conn.createStatement();
+			for (String sql : sqlList) {
+				stmt.addBatch(sql);
+			}
+			stmt.executeBatch();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	
 	/**
 	 * connect
@@ -460,11 +481,12 @@ public class CTCExportTask extends ExportTask {
 			} 
 		}
 		
+		CTCLoader.stopCapture(ctcHandleId, jobDescriptor, ICTCConstants.Job.CTC_QUIT_JOB_IMMEDIATELY);
+		
 		for (Table table : selectedTableList) {
 			CTCLoader.unregisterTable(ctcHandleId, jobDescriptor, dbUserName, table.getName());
 		}
 
-		CTCLoader.stopCapture(ctcHandleId, jobDescriptor, ICTCConstants.Job.CTC_QUIT_JOB_IMMEDIATELY);
 		CTCLoader.closeConnection(ctcHandleId);
 	}
 	
@@ -479,10 +501,8 @@ public class CTCExportTask extends ExportTask {
 		int resultDateSize = 0;
 		IntByReference _resultDataSize = new IntByReference(resultDateSize);
 
-		String resultBuffer = "";
 		Pointer resultBufferPointer = new Memory(fetchSize);
-		resultBufferPointer.setString(0, resultBuffer);
-
+		
 		int noDataCount = 0; 
 
 		CTCJsonModel[] ctcJsonModels = null;
@@ -493,20 +513,25 @@ public class CTCExportTask extends ExportTask {
 			if (returnValue == ICTCConstants.CTC_FAILED) {
 				break;
 			} else {
-				String capturedTransactionJson = resultBufferPointer.getString(0).substring(0, _resultDataSize.getValue());
-				
 				if (returnValue == ICTCConstants.CTC_SUCCESS) {
+					byte[] resultBufferByteArray = resultBufferPointer.getByteArray(0, _resultDataSize.getValue());
+					
+					String capturedTransactionJson = StringUtils.newStringUtf8(resultBufferByteArray);
+
 					CTCJsonModel[] modelsFromJson = gson.fromJson(capturedTransactionJson, CTCJsonModel[].class);
 					ctcJsonModels = (CTCJsonModel[]) ArrayUtils.addAll(ctcJsonModels, modelsFromJson);
 					
-					resultBufferPointer.clear(_resultDataSize.getValue());
+					resultBufferPointer.clear(fetchSize);
 					resultBufferPointer = null;
-					_resultDataSize = null;
 					
 					return ctcJsonModels;
 				} else if (returnValue == ICTCConstants.CTC_SUCCESS_FRAGMENTED) {
+					byte[] resultBufferByteArray = resultBufferPointer.getByteArray(0, _resultDataSize.getValue());
+					String capturedTransactionJson = StringUtils.newStringUtf8(resultBufferByteArray);
+					
 					CTCJsonModel[] modelsFromJson = gson.fromJson(capturedTransactionJson, CTCJsonModel[].class);
 					ctcJsonModels = (CTCJsonModel[]) ArrayUtils.addAll(ctcJsonModels, modelsFromJson);
+					
 					continue;
 				} else if (returnValue == ICTCConstants.CTC_SUCCESS_NO_DATA) {
 					if (migrationConfig.isFetchingEnd() == true) {
