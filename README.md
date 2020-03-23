@@ -1,6 +1,6 @@
-CUBRID Migration Toolkit (CMT) is a software tool which allows to migrate data from MySQL/Oracle/CUBRID (previous versions) to CUBRID Database Server.
+CUBRID Migration Toolkit (CMT) is a software tool that allows migrating data from MySQL/Oracle/CUBRID to CUBRID Database Server.
 
-The data and schema in the source database can be as sofisticated as possible. CMT provides the default settings to cast native MySQL and other DBMS data types to native CUBRID data types, though most of them will overlap as CUBRID provides over 90% MySQL compatibility. If it is necessary to have the destination column data type different from the default settings, it can be easily customized before the migration process starts.
+The data and schema in the source database can be as sophisticated as possible. CMT provides the default settings to cast native MySQL and other DBMS data types to native CUBRID data types. However, most of them will overlap as CUBRID provides over 90% MySQL compatibility. If it is necessary to have the destination column data type different from the default settings, it can be easily customized before the migration process starts.
 
 ---
 __Note__: When you want to use this tool, you need to download JDBC files first from their official site.
