@@ -157,7 +157,7 @@ public class Table extends
 			return null;
 		}
 		for (FK fk : fks) {
-			if (name.equals(fk.getName())) {
+			if (name.equalsIgnoreCase(fk.getName())) {
 				return fk;
 			}
 		}
