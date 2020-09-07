@@ -515,6 +515,7 @@ public class MigrationConfiguration {
 		List<Sequence> tempSerials = new ArrayList<Sequence>();
 		final CUBRIDSQLHelper cubridddlUtil = CUBRIDSQLHelper.getInstance(null);
 		List<Schema> schemas = srcCatalog.getSchemas();
+		Map<String, Integer> allSequencesCountMap = srcCatalog.getAllSequencesCountMap();
 		for (Schema sourceDBSchema : schemas) {
 			for (Sequence seq : sourceDBSchema.getSequenceList()) {
 				SourceSequenceConfig sc = getExpSerialCfg(seq.getOwner(), seq.getName());
@@ -522,7 +523,7 @@ public class MigrationConfiguration {
 					sc = new SourceSequenceConfig();
 					sc.setOwner(sourceDBSchema.getName());
 					sc.setName(seq.getName());
-					sc.setTarget(StringUtils.lowerCase(seq.getName()));
+					sc.setTarget(getTargetName(allSequencesCountMap, seq.getOwner(), seq.getName()));
 					sc.setCreate(false);
 					sc.setReplace(false);
 				}
@@ -540,6 +541,16 @@ public class MigrationConfiguration {
 		expSerials.addAll(tempList);
 		targetSequences.clear();
 		targetSequences.addAll(tempSerials);
+	}
+	
+	private boolean isDuplicatedObject(Map<String, Integer> allObjectsMap, String objectName) {
+		if (allObjectsMap == null) {
+			return false;
+		}
+		if (allObjectsMap.get(objectName) == null) {
+			return false;
+		}
+		return allObjectsMap.get(objectName) > 1;
 	}
 
 	/**
@@ -663,7 +674,12 @@ public class MigrationConfiguration {
 		List<SourceEntryTableConfig> tempExpEntryTables = new ArrayList<SourceEntryTableConfig>();
 		Map<String, Table> tempTarTables = new TreeMap<String, Table>();
 		List<Schema> schemas = srcCatalog.getSchemas();
+		Map<String, Integer> allTablesCountMap = srcCatalog.getAllTablesCountMap();
 		for (Schema sourceDBSchema : schemas) {
+			String prefix = "";
+			if (StringUtils.isNotBlank(sourceDBSchema.getName())) {
+				prefix = sourceDBSchema.getName() + ".";
+			}
 			for (Table srcTable : sourceDBSchema.getTables()) {
 				SourceEntryTableConfig setc = getExpEntryTableCfg(sourceDBSchema.getName(),
 						srcTable.getName());
@@ -671,7 +687,7 @@ public class MigrationConfiguration {
 					setc = new SourceEntryTableConfig();
 					setc.setOwner(sourceDBSchema.getName());
 					setc.setName(srcTable.getName());
-					setc.setTarget(StringUtils.lowerCase(srcTable.getName()));
+					setc.setTarget(getTargetName(allTablesCountMap, srcTable.getOwner(), srcTable.getName()));
 					setc.setCreateNewTable(false);
 					setc.setCreatePartition(false);
 					setc.setCreatePK(false);
@@ -695,8 +711,7 @@ public class MigrationConfiguration {
 					}
 					tt.setName(setc.getTarget());
 				}
-				tempTarTables.put(tt.getName(), tt);
-
+				tempTarTables.put(prefix + tt.getName(), tt);
 				buildTableColumnCfg(setc, srcTable, tt, isReset);
 				buildTablePKCfg(setc, srcTable, tt);
 				buildTableFKCfg(setc, srcTable, tt, isReset);
@@ -735,7 +750,7 @@ public class MigrationConfiguration {
 							tt = getDBTransformHelper().createCUBRIDTable(sstc, st, this);
 							tt.setName(sstc.getTarget());
 						}
-						tempTarTables.put(tt.getName(), tt);
+						tempTarTables.put(prefix + tt.getName(), tt);
 
 						buildTableColumnCfg(sstc, st, tt, isReset);
 					} catch (Exception ex) {
@@ -830,7 +845,16 @@ public class MigrationConfiguration {
 			if (tfk == null) {
 				tfk = new FK(tarTable);
 				tfk.setName(sfc.getTarget());
-				tfk.setReferencedTableName(fk.getReferencedTableName());
+				
+				String referencedTableName = fk.getReferencedTableName();
+				Map<String, Integer> allTablesCountMap = srcCatalog.getAllTablesCountMap();
+				Integer integer = allTablesCountMap.get(referencedTableName);
+				if (integer > 1) {
+					String owner = fk.getTable().getOwner();
+					tfk.setReferencedTableName(owner + "_" + referencedTableName);
+				} else {
+					tfk.setReferencedTableName(referencedTableName);
+				}
 
 				Map<String, String> fkcolumns = fk.getColumns();
 				for (Map.Entry<String, String> entry : fkcolumns.entrySet()) {
@@ -953,6 +977,7 @@ public class MigrationConfiguration {
 		List<SourceViewConfig> tempSCList = new ArrayList<SourceViewConfig>();
 		List<View> tempTarList = new ArrayList<View>();
 		List<Schema> schemas = srcCatalog.getSchemas();
+		Map<String, Integer> allViewsCountMap = srcCatalog.getAllViewsCountMap();
 		for (Schema sourceDBSchema : schemas) {
 			for (View vw : sourceDBSchema.getViews()) {
 				SourceViewConfig sc = getExpViewCfg(sourceDBSchema.getName(), vw.getName());
@@ -960,7 +985,7 @@ public class MigrationConfiguration {
 					sc = new SourceViewConfig();
 					sc.setName(vw.getName());
 					sc.setOwner(vw.getOwner());
-					sc.setTarget(StringUtils.lowerCase(vw.getName()));
+					sc.setTarget(getTargetName(allViewsCountMap, vw.getOwner(), vw.getName()));
 					sc.setCreate(false);
 					sc.setReplace(false);
 				}
@@ -977,6 +1002,13 @@ public class MigrationConfiguration {
 		expViews.addAll(tempSCList);
 		targetViews.clear();
 		targetViews.addAll(tempTarList);
+	}
+
+	private String getTargetName(Map<String, Integer> map, String owner, String name) {
+		if (isDuplicatedObject(map, name)) {
+			return StringUtils.lowerCase(owner + "_" + name);
+		}
+		return StringUtils.lowerCase(name);
 	}
 
 	/**
