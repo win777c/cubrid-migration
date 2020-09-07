@@ -175,7 +175,7 @@ public abstract class DefaultMigrationReporter implements
 			}
 		} else if (event instanceof StartExpTableEvent) {
 			StartExpTableEvent ev = (StartExpTableEvent) event;
-			RecordMigrationResult recMigResults = report.getRecMigResults(
+			RecordMigrationResult recMigResults = report.getRecMigResults(ev.getSourceTable().getOwner(),
 					ev.getSourceTable().getName(), ev.getSourceTable().getTarget());
 			if (recMigResults.getStartExportTime() <= 0) {
 				recMigResults.setStartExportTime(eventTime);

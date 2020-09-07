@@ -138,7 +138,8 @@ public class MigrationReport implements
 	 * @param event ExportRecordsEvent
 	 */
 	public void addExpMigRecResult(ExportRecordsEvent event) {
-		RecordMigrationResult result = getRecMigResults(event.getSourceTable().getName(),
+		RecordMigrationResult result = getRecMigResults(event.getSourceTable().getOwner(), 
+				event.getSourceTable().getName(),
 				event.getSourceTable().getTarget());
 		result.setExpCount(result.getExpCount() + event.getRecordCount());
 		if (result.getTotalCount() < result.getExpCount()) {
@@ -155,7 +156,8 @@ public class MigrationReport implements
 	 * @param event ImportRecordsEvent
 	 */
 	public void addImpMigRecResult(ImportRecordsEvent event) {
-		RecordMigrationResult result = getRecMigResults(event.getSourceTable().getName(),
+		RecordMigrationResult result = getRecMigResults(event.getSourceTable().getOwner(), 
+				event.getSourceTable().getName(),
 				event.getSourceTable().getTarget());
 		if (event.isSuccess()) {
 			result.setImpCount(result.getImpCount() + event.getRecordCount());
@@ -328,9 +330,19 @@ public class MigrationReport implements
 	 * @param target String
 	 * @return RecordMigrationResult
 	 */
-	public RecordMigrationResult getRecMigResults(String source, String target) {
+	public RecordMigrationResult getRecMigResults(String owner, String source, String target) {
 		for (RecordMigrationResult rmr : recMigResults) {
-			if (rmr.getSource().equals(source)) {
+			// for single schema
+			String rmrSource = rmr.getSource();
+			if (owner == null 
+					&& rmrSource.equalsIgnoreCase(source)) {
+				return rmr;
+			}
+			// for multi schema
+			String srcSchema = rmr.getSrcSchema();
+			if (srcSchema != null 
+					&& srcSchema.equalsIgnoreCase(owner) 
+					&& rmrSource.equalsIgnoreCase(source)) {
 				return rmr;
 			}
 		}
@@ -483,6 +495,7 @@ public class MigrationReport implements
 				continue;
 			}
 			RecordMigrationResult result = new RecordMigrationResult();
+			result.setSrcSchema(stc.getOwner());
 			result.setSource(stc.getName());
 			result.setTarget(stc.getTarget());
 			if (!restore) {
