@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -58,12 +59,15 @@ import org.eclipse.ui.part.EditorPart;
 import com.cubrid.common.ui.swt.table.ObjectArrayRowTableLabelProvider;
 import com.cubrid.common.ui.swt.table.TableViewerBuilder;
 import com.cubrid.cubridmigration.core.common.TimeZoneUtils;
+import com.cubrid.cubridmigration.core.common.log.LogUtil;
+import com.cubrid.cubridmigration.core.dbtype.DatabaseType;
 import com.cubrid.cubridmigration.core.engine.IMigrationMonitor;
 import com.cubrid.cubridmigration.core.engine.ThreadUtils;
 import com.cubrid.cubridmigration.core.engine.config.MigrationConfiguration;
 import com.cubrid.cubridmigration.core.engine.event.ExportRecordsEvent;
 import com.cubrid.cubridmigration.core.engine.event.ImportRecordsEvent;
 import com.cubrid.cubridmigration.core.engine.event.MigrationEvent;
+//import com.cubrid.cubridmigration.core.engine.exporter.impl.JDBCExporter;
 import com.cubrid.cubridmigration.ui.MigrationUIPlugin;
 import com.cubrid.cubridmigration.ui.SWTResourceConstents;
 import com.cubrid.cubridmigration.ui.history.MigrationReportEditorPart;
@@ -181,6 +185,8 @@ public class MigrationProgressEditorPart extends
 
 	protected MigrationProgressUIController controller;
 
+	private MigrationConfiguration cf;
+	
 	/**
 	 * Create part of the editor
 	 * 
@@ -256,9 +262,14 @@ public class MigrationProgressEditorPart extends
 	protected void createProgressTableViewer(final Composite pnlBackTop) {
 		TableViewerBuilder tvBuilder = new TableViewerBuilder();
 		tvBuilder.setColumnNames(new String[] {Messages.colTable, Messages.colRecordCount,
-				Messages.colExportedCount, Messages.colImportedCount, Messages.colProgressPercent});
-		tvBuilder.setColumnWidths(new int[] {200, 120, 120, 120, 100});
-		tvBuilder.setColumnStyles(new int[] {SWT.LEFT, SWT.RIGHT, SWT.RIGHT, SWT.RIGHT, SWT.CENTER});
+				Messages.colExportedCount, Messages.colImportedCount, Messages.colProgressPercent, Messages.colOwnerName});
+		int[] columnWidths = new int[] { 200, 120, 120, 120, 100, 120 };
+		DatabaseType dbType = cf.getSourceDBType();
+		if (dbType != null && !dbType.isSupportMultiSchema()) {
+			columnWidths[5] = 0;
+		}
+		tvBuilder.setColumnWidths(columnWidths);
+		tvBuilder.setColumnStyles(new int[] {SWT.LEFT, SWT.RIGHT, SWT.RIGHT, SWT.RIGHT, SWT.CENTER, SWT.CENTER});
 		tvBuilder.setContentProvider(new ArrayContentProvider());
 		tvBuilder.setLabelProvider(new ObjectArrayRowTableLabelProvider());
 		tvProgress = tvBuilder.buildTableViewer(pnlBackTop, SWT.BORDER | SWT.FULL_SELECTION);
@@ -344,7 +355,7 @@ public class MigrationProgressEditorPart extends
 	 * @throws PartInitException when error
 	 */
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
-		MigrationConfiguration cf = (MigrationConfiguration) input.getAdapter(MigrationConfiguration.class);
+		cf = (MigrationConfiguration) input.getAdapter(MigrationConfiguration.class);
 		if (cf == null) {
 			throw new RuntimeException("Migration configuration can not be null.");
 		}
@@ -444,7 +455,7 @@ public class MigrationProgressEditorPart extends
 	 */
 	protected void updateExportedCountInTableViewer(MigrationEvent event) {
 		ExportRecordsEvent ere = (ExportRecordsEvent) event;
-		String[] item = controller.updateTableExpData(ere.getSourceTable().getName(),
+		String[] item = controller.updateTableExpData(ere.getSourceTable().getOwner(), ere.getSourceTable().getName(),
 				ere.getRecordCount());
 		tvProgress.refresh(item);
 	}
@@ -456,7 +467,7 @@ public class MigrationProgressEditorPart extends
 	 */
 	protected void updateImportedCountInTableViewer(MigrationEvent event) {
 		ImportRecordsEvent ire = (ImportRecordsEvent) event;
-		String[] item = controller.updateTableImpData(ire.getSourceTable().getName(),
+		String[] item = controller.updateTableImpData(ire.getSourceTable().getOwner(), ire.getSourceTable().getName(),
 				ire.getRecordCount());
 		tvProgress.refresh(item);
 	}
