@@ -191,6 +191,7 @@ public class Messages extends
 	public static String colNewSchema;
 	public static String colObjects;
 	public static String colOldSchema;
+	public static String colOwnerName;
 	public static String colPrecision;
 	public static String colProgress;
 	public static String colProgressPercent;

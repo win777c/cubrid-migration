@@ -85,7 +85,7 @@ public class MigrationReportUIController {
 
 	public static final String[] TABLE_HEADER_DATA = new String[] {Messages.colTableName,
 			Messages.colTotal, Messages.colExpCount, Messages.colExpTime, Messages.colImpCount,
-			Messages.colImpTime, Messages.colCompleted, Messages.colTotalElapsed};
+			Messages.colImpTime, Messages.colCompleted, Messages.colTotalElapsed, Messages.colOwnerName};
 
 	/**
 	 * @param reporter MigrationReporter
@@ -170,7 +170,7 @@ public class MigrationReportUIController {
 		data.add(recMigArrays);
 		RecordMigrationResultTableLabelProvider provider = new RecordMigrationResultTableLabelProvider();
 		for (RecordMigrationResult result : recMigResults) {
-			String[] value = new String[8];
+			String[] value = new String[9];
 			for (int i = 0; i < value.length; i++) {
 				value[i] = provider.getColumnText(result, i);
 			}

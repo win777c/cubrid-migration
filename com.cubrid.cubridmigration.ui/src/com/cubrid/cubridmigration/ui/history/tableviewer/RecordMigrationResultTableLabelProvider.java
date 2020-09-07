@@ -91,6 +91,8 @@ public class RecordMigrationResultTableLabelProvider extends
 							/ (rs.getTotalCount() * 2)) + "%");
 		case 7:
 			return getTimeUsed(rs.getTotalCount(), rs.getStartExportTime(), rs.getEndImportTime());
+		case 8:
+			return rs.getSrcSchema();
 		default:
 			return null;
 		}

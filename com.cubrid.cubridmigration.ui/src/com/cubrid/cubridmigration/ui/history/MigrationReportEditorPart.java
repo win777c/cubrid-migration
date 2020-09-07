@@ -334,23 +334,23 @@ public class MigrationReportEditorPart extends
 		tfReport.layout();
 	}
 
+
 	/**
 	 * @param tiTables TabItem
 	 */
 	private void createRecordDetailTableViewer(TabItem tiTables) {
 		TableViewerBuilder tvBuilder = new TableViewerBuilder();
 		tvBuilder.setColumnNames(MigrationReportUIController.TABLE_HEADER_DATA);
-		tvBuilder.setColumnWidths(new int[] {150, 100, 140, 130, 140, 130, 90, 130});
+		tvBuilder.setColumnWidths(new int[] {150, 100, 140, 130, 140, 130, 90, 130, 130});
 		tvBuilder.setColumnStyles(new int[] {SWT.LEFT, SWT.RIGHT, SWT.RIGHT, SWT.LEFT, SWT.RIGHT,
-				SWT.LEFT, SWT.RIGHT, SWT.LEFT});
+				SWT.LEFT, SWT.RIGHT, SWT.LEFT, SWT.CENTER});
 		tvBuilder.setContentProvider(new ArrayContentProvider());
 		tvBuilder.setLabelProvider(new RecordMigrationResultTableLabelProvider());
 		tvTableRecords = tvBuilder.buildTableViewer(tfDetail, SWT.BORDER | SWT.FULL_SELECTION
 				| SWT.H_SCROLL | SWT.V_SCROLL);
-
 		tiTables.setControl(tvTableRecords.getTable());
 	}
-
+	
 	/**
 	 * @param backGroundCom Composite
 	 */
