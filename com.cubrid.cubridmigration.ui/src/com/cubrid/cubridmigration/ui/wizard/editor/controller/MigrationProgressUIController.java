@@ -231,7 +231,6 @@ public class MigrationProgressUIController {
 		int index = 0;
 		tableItems = new String[expStcs.size()][6];
 		for (SourceTableConfig stc : expStcs) {
-			LOG.info("[RND-1125, MigrationProgressUIController] - " + stc.getOwner() + "." + stc.getName());
 			Table tbl = config.getSrcTableSchema(stc.getOwner(), stc.getName());
 			if (config.isImplicitEstimate()) {
 				tableItems[index] = new String[] {stc.getName(), NA_STRING, NA_STRING, NA_STRING,
