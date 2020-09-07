@@ -377,7 +377,8 @@ public abstract class DBTransformHelper {
 		Table tarTable = new Table();
 		tarTable.setName(stc.getTarget());
 		tarTable.setReuseOID(sourceTable.isReuseOID());
-
+		tarTable.setOwner(stc.getOwner());
+		
 		List<Column> srcColumns = sourceTable.getColumns();
 		List<Column> newColumns = new ArrayList<Column>();
 
@@ -425,7 +426,17 @@ public abstract class DBTransformHelper {
 					tfk.addRefColumnName(StringUtils.lowerCase(entry.getKey()),
 							StringUtils.lowerCase(entry.getValue()));
 				}
-				tfk.setReferencedTableName(sfk.getReferencedTableName());
+
+				String referencedTableName = sfk.getReferencedTableName();
+				Map<String, Integer> allTablesCountMap = config.getSrcCatalog().getAllTablesCountMap();
+				Integer tableCount = allTablesCountMap.get(referencedTableName);
+				if (tableCount != null && tableCount > 1) {
+					String owner = sfk.getTable().getOwner();
+					tfk.setReferencedTableName(StringUtils.lowerCase(owner) + "_" + referencedTableName);
+				} else {
+					tfk.setReferencedTableName(referencedTableName);
+				}
+				
 				if (sc == null) {
 					tfk.setName(StringUtils.lowerCase(sfk.getName()));
 				} else {
