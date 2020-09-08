@@ -63,6 +63,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import com.cubrid.common.ui.navigator.ICUBRIDNode;
 import com.cubrid.cubridmigration.core.common.log.LogUtil;
 import com.cubrid.cubridmigration.core.dbobject.Catalog;
+import com.cubrid.cubridmigration.core.dbobject.DBObject;
 import com.cubrid.cubridmigration.core.dbobject.Table;
 import com.cubrid.cubridmigration.core.dbtype.DatabaseType;
 import com.cubrid.cubridmigration.core.engine.config.MigrationConfiguration;
@@ -146,13 +147,18 @@ public class ObjectMappingPage extends
 			return;
 		}
 		try {
-
 			//Update migration source database schema
 			Catalog sourceCatalog = mw.getSourceCatalog();
 			final MigrationConfiguration cfg = mw.getMigrationConfig();
 			if (cfg.sourceIsOnline() && !cfg.getSourceDBType().equals(DatabaseType.CUBRID)) {
 				MessageDialog.openInformation(getShell(), Messages.msgInformation,
 						Messages.msgLowerCaseWarning);
+			}
+			if (isFirstVisible
+					&& util.checkMultipleSchema(sourceCatalog, cfg)
+					&& util.createAllObjectsMap(sourceCatalog)
+					&& util.hasDuplicatedObjects(sourceCatalog)) {
+				showDetailMessageDialog(sourceCatalog);
 			}
 
 			cfg.setSrcCatalog(sourceCatalog, !mw.isLoadMigrationScript());
@@ -167,7 +173,6 @@ public class ObjectMappingPage extends
 			refreshTreeView();
 			this.getShell().setMaximized(true);
 			isFirstVisible = false;
-
 			// select all if there have no selected tables to migrate
 			if (!cfg.hasObjects2Export()) {
 				cfg.setAll(true);
@@ -186,6 +191,19 @@ public class ObjectMappingPage extends
 			throw ex;
 		}
 
+	}
+
+	private void showDetailMessageDialog(Catalog sourceCatalog) {
+		String detailMessage = getDetailMessage(sourceCatalog);
+		DetailMessageDialog.openInfo(getShell(), Messages.titleDuplicateObjects, Messages.msgDuplicateObjects, detailMessage);
+	}
+
+	private String getDetailMessage(Catalog sourceCatalog) {
+		StringBuffer sb = new StringBuffer();
+		util.createDetailMessage(sb, sourceCatalog, DBObject.OBJ_TYPE_TABLE);
+		util.createDetailMessage(sb, sourceCatalog, DBObject.OBJ_TYPE_VIEW);
+		util.createDetailMessage(sb, sourceCatalog, DBObject.OBJ_TYPE_SEQUENCE);
+		return sb.toString();
 	}
 
 	/**
