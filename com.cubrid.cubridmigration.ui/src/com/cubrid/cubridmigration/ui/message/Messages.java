@@ -494,6 +494,7 @@ public class Messages extends
 	public static String msgDoRemapColumns;
 	public static String msgDriverDownloaded;
 	public static String msgDuplicatedJdbcDriverFile;
+	public static String msgDuplicateObjects;
 	public static String msgEditJDBC;
 	public static String msgEditJDBCDesc;
 	public static String msgErr0Increment;
@@ -711,6 +712,7 @@ public class Messages extends
 	public static String titleConfirm;
 	public static String titleConfirmDelete;
 	public static String titleCSVSettings;
+	public static String titleDuplicateObjects;
 	public static String titleEditScript;
 	public static String titleError;
 	public static String titleExportScript;
