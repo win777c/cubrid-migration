@@ -34,8 +34,10 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -48,11 +50,13 @@ import com.cubrid.cubridmigration.core.datatype.DBDataTypeHelper;
 import com.cubrid.cubridmigration.core.datatype.DataTypeConstant;
 import com.cubrid.cubridmigration.core.dbobject.Catalog;
 import com.cubrid.cubridmigration.core.dbobject.Column;
+import com.cubrid.cubridmigration.core.dbobject.DBObject;
 import com.cubrid.cubridmigration.core.dbobject.FK;
 import com.cubrid.cubridmigration.core.dbobject.Index;
 import com.cubrid.cubridmigration.core.dbobject.Schema;
 import com.cubrid.cubridmigration.core.dbobject.Sequence;
 import com.cubrid.cubridmigration.core.dbobject.Table;
+import com.cubrid.cubridmigration.core.dbobject.TableOrView;
 import com.cubrid.cubridmigration.core.dbobject.View;
 import com.cubrid.cubridmigration.core.dbtype.DatabaseType;
 import com.cubrid.cubridmigration.core.engine.config.MigrationConfiguration;
@@ -926,5 +930,101 @@ public class MigrationCfgUtils {
 			return "";
 		}
 		return NLS.bind(Messages.objectMapPageErrMsgNoPK, sb.toString());
+	}
+
+	public boolean checkMultipleSchema(Catalog catalog, MigrationConfiguration cfg) {
+		return cfg.sourceIsOnline()
+				&& cfg.getSourceDBType().isSupportMultiSchema()
+				&& (catalog.getSchemas().size() > 1)
+				&& !cfg.hasObjects2Export();
+	}
+
+	public boolean createAllObjectsMap(Catalog catalog) {
+		List<Schema> schemas = catalog.getSchemas();
+		if (schemas.size() <= 1) {
+			return false;
+		}
+
+		Map<String, Integer> allTablesCountMap = catalog.getAllTablesCountMap();
+		Map<String, Integer> allViewsCountMap = catalog.getAllViewsCountMap();
+		Map<String, Integer> allSequencesCountMap = catalog.getAllSequencesCountMap();
+
+		allTablesCountMap.clear();
+		allViewsCountMap.clear();
+		allSequencesCountMap.clear();
+
+		for (Schema schema : schemas) {
+			createMap(allTablesCountMap, schema.getTables());
+			createMap(allViewsCountMap, schema.getViews());
+			createMap(allSequencesCountMap, schema.getSequenceList());
+		}
+
+		return true;
+	}
+
+	private void createMap(Map<String, Integer> map, List<?> list) {
+		for (Object obj : list) {
+			DBObject dbObject = (DBObject) obj;
+			String name = dbObject.getName();
+			map.put(name, (map.get(name) != null ? map.get(name) : 0) + 1);
+		}
+	}
+
+	public boolean hasDuplicatedObjects(Catalog catalog) {
+		return hasDuplicatedObjects(catalog.getAllTablesCountMap())
+		        || hasDuplicatedObjects(catalog.getAllViewsCountMap())
+		        || hasDuplicatedObjects(catalog.getAllSequencesCountMap());
+	}
+
+	private boolean hasDuplicatedObjects(Map<String, Integer> map) {
+		Iterator<String> it = map.keySet().iterator();
+		while (it.hasNext()) {
+			String key = it.next();
+			if (map.get(key) > 1) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void createDetailMessage(StringBuffer sb, Catalog catalog, String objType) {
+		List<Schema> schemas = catalog.getSchemas();
+		sb.append("[ " + objType.toUpperCase()  + "(s) ]\n");
+		for (Schema schema : schemas) {
+			if (objType.equals(DBObject.OBJ_TYPE_TABLE)) {
+				createObjectInformation(sb, catalog.getAllTablesCountMap(), schema.getTables());
+			} else if (objType.equals(DBObject.OBJ_TYPE_VIEW)) {
+				createObjectInformation(sb, catalog.getAllViewsCountMap(), schema.getViews());
+			} else if (objType.equals(DBObject.OBJ_TYPE_SEQUENCE)) {
+				createObjectInformation(sb, catalog.getAllSequencesCountMap(), schema.getSequenceList());
+			}
+		}
+		sb.append("\n");
+	}
+
+	private void createObjectInformation(StringBuffer sb, Map<String, Integer> map, List<?> objectList) {
+		for (Object object : objectList) {
+			String objectName = ((DBObject) object).getName();
+			if (isDuplicatedObject(map, objectName)) {
+				String owner = "";
+				if (object instanceof TableOrView) {
+					owner = ((TableOrView) object).getOwner();
+				} else if (object instanceof Sequence) {
+					owner = ((Sequence) object).getOwner();
+				}
+				appendDuplicatedObjectInformation(sb, owner, objectName);
+			}
+		}
+	}
+
+	private boolean isDuplicatedObject(Map<String, Integer> map, String objectName) {
+		return map.get(objectName) != null && (map.get(objectName) > 1);
+	}
+
+	private void appendDuplicatedObjectInformation(StringBuffer sb, String owner, String objectName) {
+		sb.append("- ").append(owner).append(".").append(objectName)
+		.append(" -> ")
+		.append(owner.toLowerCase()).append("_").append(objectName.toLowerCase())
+		.append("\n");
 	}
 }

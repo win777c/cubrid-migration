@@ -69,7 +69,7 @@ public class TableRecordExportTask extends
 
 				importTaskExecutor = mrManager.getImportRecordExecutor();
 				importTaskExecutor.execute((Runnable) task);
-				mrManager.getStatusMgr().addExpCount("", sourceTable.getName(), records.size());
+				mrManager.getStatusMgr().addExpCount(sourceTable.getOwner(), sourceTable.getName(), records.size());
 			}
 
 			public void startExportTable(String tableName) {
@@ -77,7 +77,7 @@ public class TableRecordExportTask extends
 			}
 
 			public void endExportTable(String tableName) {
-				mrManager.getStatusMgr().setExpFinished("", sourceTable.getName());
+				mrManager.getStatusMgr().setExpFinished(sourceTable.getOwner(), sourceTable.getName());
 			}
 		});
 	}

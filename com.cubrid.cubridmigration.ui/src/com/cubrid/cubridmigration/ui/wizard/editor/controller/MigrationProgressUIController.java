@@ -229,18 +229,18 @@ public class MigrationProgressUIController {
 		expStcs.addAll(config.getExpEntryTableCfg());
 		expStcs.addAll(config.getExpSQLCfg());
 		int index = 0;
-		tableItems = new String[expStcs.size()][5];
+		tableItems = new String[expStcs.size()][6];
 		for (SourceTableConfig stc : expStcs) {
 			Table tbl = config.getSrcTableSchema(stc.getOwner(), stc.getName());
 			if (config.isImplicitEstimate()) {
 				tableItems[index] = new String[] {stc.getName(), NA_STRING, NA_STRING, NA_STRING,
-						NA_STRING};
+						NA_STRING, stc.getOwner()};
 			} else if (tbl == null || tbl.getTableRowCount() == 0) {
 				tableItems[index] = new String[] {stc.getName(), NA_STRING, NA_STRING, NA_STRING,
-						NA_STRING};
+						NA_STRING, stc.getOwner()};
 			} else {
 				tableItems[index] = new String[] {stc.getName(),
-						String.valueOf(tbl.getTableRowCount()), "0", "0", "0%"};
+						String.valueOf(tbl.getTableRowCount()), "0", "0", "0%", stc.getOwner()};
 			}
 			index++;
 		}
@@ -384,7 +384,7 @@ public class MigrationProgressUIController {
 	public void setConfig(MigrationConfiguration config) {
 		this.config = config;
 	}
-
+	
 	public void setProgressMonitorDialogRunner(
 			ProgressMonitorDialogRunner progressMonitorDialogRunner) {
 		this.progressMonitorDialogRunner = progressMonitorDialogRunner;
@@ -450,20 +450,42 @@ public class MigrationProgressUIController {
 		}
 		for (String[] item : tableItems) {
 			if (item[0].equals(tableName)) {
-				long newExp = getCellValue(item[2]) + exp;
-				item[2] = String.valueOf(newExp);
-				if (!config.isImplicitEstimate()) {
-					long oldimp = getCellValue(item[3]);
-					item[4] = String.valueOf(Math.round(100 * (newExp + oldimp)
-							/ (2 * getCellValue(item[1]))))
-							+ "%";
-				}
-				return item;
+				return getItemForExpData(exp, item);
 			}
 		}
 		return new String[] {};
 	}
 
+	public String[] updateTableExpData(String owner, String tableName, long exp) {
+		if (exp <= 0) {
+			return new String[] {};
+		}
+		for (String[] item : tableItems) {
+			
+			// for Single Schema 
+			if (item[5] == null || "null".equalsIgnoreCase(item[5])) {
+				return updateTableExpData(tableName, exp);
+			}
+			
+			if (item[0].equals(tableName) && item[5].equalsIgnoreCase(owner)) {
+				return getItemForExpData(exp, item);
+			}
+		}
+		return new String[] {};
+	}
+
+	private String[] getItemForExpData(long exp, String[] item) {
+		long newExp = getCellValue(item[2]) + exp;
+		item[2] = String.valueOf(newExp);
+		if (!config.isImplicitEstimate()) {
+			long oldimp = getCellValue(item[3]);
+			item[4] = String.valueOf(Math.round(100 * (newExp + oldimp)
+					/ (2 * getCellValue(item[1]))))
+					+ "%";
+		}
+		return item;
+	}
+	
 	/**
 	 * Update import count of table
 	 * 
@@ -472,21 +494,39 @@ public class MigrationProgressUIController {
 	 * 
 	 * @return row data updated
 	 */
-	public String[] updateTableImpData(String tableName, long imp) {
+	public String[] updateTableImpData(String owner, String tableName, long imp) {
+		
 		for (String[] item : tableItems) {
-			if (item[0].equals(tableName)) {
-				long newImp = getCellValue(item[3]) + imp;
-				item[3] = String.valueOf(newImp);
-				if (!config.isImplicitEstimate()) {
-					long oldexp = getCellValue(item[2]);
-					item[4] = String.valueOf(Math.round(100 * (oldexp + newImp)
-							/ (2 * getCellValue(item[1]))))
-							+ "%";
-				}
-				return (item);
+			// for Single Schema
+			if (item[5] == null || "null".equalsIgnoreCase(item[5])) {
+				return updateTableImpData(tableName, imp);
+			}
+			if (item[0].equals(tableName) && item[5].equalsIgnoreCase(owner)) {
+				return getItemForImpData(imp, item);
 			}
 		}
 		return new String[] {};
+	}
+	
+	public String[] updateTableImpData(String tableName, long imp) {
+		for (String[] item : tableItems) {
+			if (item[0].equals(tableName)) {
+				return getItemForImpData(imp, item);
+			}
+		}
+		return new String[] {};
+	}
+
+	private String[] getItemForImpData(long imp, String[] item) {
+		long newImp = getCellValue(item[3]) + imp;
+		item[3] = String.valueOf(newImp);
+		if (!config.isImplicitEstimate()) {
+			long oldexp = getCellValue(item[2]);
+			item[4] = String.valueOf(Math.round(100 * (oldexp + newImp)
+					/ (2 * getCellValue(item[1]))))
+					+ "%";
+		}
+		return item;
 	}
 
 	/**

@@ -119,7 +119,7 @@ public abstract class TableOrView extends
 	 */
 	public Column getColumnByName(String name) {
 		for (Column column : columns) {
-			if (column.getName().equals(name)) {
+			if (column.getName().equalsIgnoreCase(name)) {
 				return column;
 			}
 		}

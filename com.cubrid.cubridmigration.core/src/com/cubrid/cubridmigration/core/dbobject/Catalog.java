@@ -78,6 +78,10 @@ public class Catalog implements
 
 	private long createTime;
 
+	private Map<String, Integer> allTablesCountMap = new HashMap<String, Integer>();
+	private Map<String, Integer> allViewsCountMap = new HashMap<String, Integer>();
+	private Map<String, Integer> allSequencesCountMap = new HashMap<String, Integer>();
+	
 	public Catalog() {
 		createTime = System.currentTimeMillis();
 	}
@@ -233,6 +237,32 @@ public class Catalog implements
 	public void setSupportedDataType(Map<String, List<DataType>> supportedDataType) {
 		this.supportedDataType = supportedDataType;
 	}
+	
+	/**
+	 * The Signature is used for Identification of the catalog, same Signature
+	 * means same catalog.
+	 * 
+	 * @return Catalog's create Time
+	 */
+	public long getCreateTime() {
+		return createTime;
+	}
+
+	public void setCreateTime(long createTime) {
+		this.createTime = createTime;
+	}
+	
+	public Map<String, Integer> getAllTablesCountMap() {
+		return allTablesCountMap;
+	}
+	
+	public Map<String, Integer> getAllViewsCountMap() {
+		return allViewsCountMap;
+	}
+	
+	public Map<String, Integer> getAllSequencesCountMap() {
+		return allSequencesCountMap;
+	}
 
 	/**
 	 * return hash code
@@ -291,20 +321,6 @@ public class Catalog implements
 		}
 
 		return true;
-	}
-
-	/**
-	 * The Signature is used for Identification of the catalog, same Signature
-	 * means same catalog.
-	 * 
-	 * @return Catalog's create Time
-	 */
-	public long getCreateTime() {
-		return createTime;
-	}
-
-	public void setCreateTime(long createTime) {
-		this.createTime = createTime;
 	}
 
 	/**
