@@ -3,6 +3,8 @@
 	<property file="product_build_conf/build.properties" />
 	<property file="product_build_conf/build_common.properties" />
 	<property name="product.version" value="${releaseStr}-build-${buildNumber}" />
+	<property name="launcher.win.32" value="${basedir}/launcher/win32/cubridmigration.exe" />
+	<property name="launcher.win.64" value="${basedir}/launcher/win64/cubridmigration.exe" />
 	<!-- Clean build directory and workspace -->
 	<target name="cleanTrash">
 		<delete includeemptydirs="true" failonerror="false">
@@ -101,6 +103,9 @@
 				<include name="*.jar" />
 			</fileset>
 		</copy>
+		<touch file="${launcher.win.32}"/>
+		<copy file="${launcher.win.32}" todir="${product.win.32}" overwrite="true"/>
+
 		<!--
 		<signjar alias="${sign.alias}" keystore="${sign.keystore}" storepass="${sign.storepass}" keypass="${sign.keypass}">
 			<path>
@@ -137,6 +142,9 @@
 				<include name="*.jar" />
 			</fileset>
 		</copy>
+		<touch file="${launcher.win.64}"/>
+		<copy file="${launcher.win.64}" todir="${product.win.64}" overwrite="true"/>
+
 		<!--
 		<signjar alias="${sign.alias}" keystore="${sign.keystore}" storepass="${sign.storepass}" keypass="${sign.keypass}">
 			<path>
